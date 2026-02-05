@@ -1,6 +1,6 @@
 import logging
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader, Dataset
 from torchvision import models
@@ -198,6 +198,7 @@ def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, devic
         logging.info(f"Epoch [{epoch+1}/{epochs}] Average Loss: {avg_loss:.4f}")
 
         if (epoch + 1) % 5 == 0:
+            # Note: We use torch.save here. Ensure to use weights_only=True when loading.
             torch.save(model.state_dict(), save_path)
             logging.info(f"Checkpoint saved to {save_path}")
 
