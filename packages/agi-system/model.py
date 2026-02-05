@@ -19,7 +19,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(
 # --- Custom Dynamic Router (Mixture of Experts) ---
 class DynamicRouter(nn.Module):
     def __init__(self, input_dim, output_dim, num_experts=4):
-        super(DynamicRouter, self).__init__()
+        super().__init__()
         self.num_experts = num_experts
         self.gate = nn.Linear(input_dim, num_experts)
         self.experts = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(num_experts)])
@@ -31,8 +31,8 @@ class DynamicRouter(nn.Module):
 
 # --- Unified Perception Module ---
 class PerceptionModule(nn.Module):
-    def __init__(self, text_dim, image_dim, sensor_dim, hidden_dim):
-        super(PerceptionModule, self).__init__()
+    def __init__(self, sensor_dim, hidden_dim):
+        super().__init__()
         # Pinning revision for security (CWE-494)
         self.text_model = GPT2Model.from_pretrained(
             "gpt2",
@@ -60,7 +60,7 @@ class PerceptionModule(nn.Module):
 # --- Advanced DNC with Dynamic Memory and Gradient Checkpointing ---
 class AdvancedDNC(nn.Module):
     def __init__(self, input_size, hidden_size, memory_size):
-        super(AdvancedDNC, self).__init__()
+        super().__init__()
         self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
         self.memory = nn.Parameter(torch.randn(memory_size, hidden_size))
         self.read_fc = nn.Linear(hidden_size + memory_size, hidden_size)
@@ -98,7 +98,7 @@ class AdvancedDNC(nn.Module):
 # --- Decision Making with RL ---
 class DecisionMakingModule(nn.Module):
     def __init__(self, input_dim, output_dim):
-        super(DecisionMakingModule, self).__init__()
+        super().__init__()
         self.performer = Performer(dim=input_dim, dim_head=32, depth=1, heads=2)
         self.policy = nn.Linear(input_dim, output_dim)
         self.value = nn.Linear(input_dim, 1)
@@ -120,9 +120,9 @@ class DecisionMakingModule(nn.Module):
 
 # --- Unified AGI System ---
 class UnifiedAGISystem(nn.Module):
-    def __init__(self, text_dim, image_dim, sensor_dim, hidden_dim, memory_size=320, output_dim=10):
-        super(UnifiedAGISystem, self).__init__()
-        self.perception_module = PerceptionModule(text_dim, image_dim, sensor_dim, hidden_dim)
+    def __init__(self, sensor_dim, hidden_dim, memory_size=320, output_dim=10):
+        super().__init__()
+        self.perception_module = PerceptionModule(sensor_dim, hidden_dim)
         self.memory_module = AdvancedDNC(hidden_dim, hidden_dim, memory_size)
         self.decision_making_module = DecisionMakingModule(hidden_dim, output_dim)
 
@@ -195,17 +195,17 @@ def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, devic
             scheduler.step()
 
         avg_loss = epoch_loss / len(train_loader)
-        logging.info(f"Epoch [{epoch+1}/{epochs}] Average Loss: {avg_loss:.4f}")
+        logging.info("Epoch [%d/%d] Average Loss: %.4f", epoch + 1, epochs, avg_loss)
 
         if (epoch + 1) % 5 == 0:
             # Note: We use torch.save here. Ensure to use weights_only=True when loading.
-            torch.save(model.state_dict(), save_path)
-            logging.info(f"Checkpoint saved to {save_path}")
+            torch.save(model.state_dict(), save_path) # nosec
+            logging.info("Checkpoint saved to %s", save_path)
 
 # --- Main Execution ---
 def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    logging.info(f"Using device: {device}")
+    logging.info("Using device: %s", device)
 
     # Synthetic data generation
     num_samples = 1000
@@ -220,7 +220,7 @@ def main():
     dataset = CustomDataset(text_data, image_data, sensor_data, targets)
     train_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
-    model = UnifiedAGISystem(text_dim=text_dim, image_dim=224, sensor_dim=sensor_dim, hidden_dim=512)
+    model = UnifiedAGISystem(sensor_dim=sensor_dim, hidden_dim=512)
     optimizer = AdamW(model.parameters(), lr=1e-4)
     scheduler = OneCycleLR(optimizer, max_lr=1e-3, total_steps=len(train_loader) * 10)
     criterion = nn.CrossEntropyLoss()
@@ -233,7 +233,7 @@ def main():
     t, img, sens, _ = dataset[0]
     t, img, sens = t.unsqueeze(0).to(device), img.unsqueeze(0).to(device), sens.unsqueeze(0).to(device)
     attr = model.explain_decision(t, img, sens)
-    logging.info(f"Attributions shape: {attr.shape}")
+    logging.info("Attributions shape: %s", attr.shape)
 
 if __name__ == "__main__":
     main()
