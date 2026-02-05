@@ -1,5 +1,5 @@
-torch
-torchvision
-transformers
-captum
-performer-pytorch
+torch==2.10.0
+torchvision==0.25.0
+transformers==5.0.0
+captum==0.8.0
+performer-pytorch==1.1.4

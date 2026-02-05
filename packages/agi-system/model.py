@@ -1,4 +1,3 @@
-import os
 import logging
 import torch
 import torch.nn as nn
@@ -34,7 +33,11 @@ class DynamicRouter(nn.Module):
 class PerceptionModule(nn.Module):
     def __init__(self, text_dim, image_dim, sensor_dim, hidden_dim):
         super(PerceptionModule, self).__init__()
-        self.text_model = GPT2Model.from_pretrained("gpt2")
+        # Pinning revision for security (CWE-494)
+        self.text_model = GPT2Model.from_pretrained(
+            "gpt2",
+            revision="607a30d783dfa663caf39e06633721c8d4cfcd7e"
+        )
         self.text_fc = nn.Linear(self.text_model.config.hidden_size, hidden_dim)
 
         self.image_model = models.efficientnet_b0(weights='IMAGENET1K_V1')
