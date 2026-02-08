@@ -31,7 +31,6 @@ export async function GET() {
       return NextResponse.json(defaultPlanInfo, { status: 200 })
     }
 
-    console.log("Fetching subscription for user:", userId)
 
     const { data: userPlan, error: planError } = await supabaseWithAdminAccess
       .from("users_to_plans")

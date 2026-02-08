@@ -2,6 +2,7 @@ import logging
 import torch
 from torch import nn
 import torch.nn.functional as F
+from safetensors.torch import save_file
 from torch.utils.data import DataLoader, Dataset
 from torchvision import models
 from transformers import GPT2Model
@@ -160,7 +161,7 @@ class CustomDataset(Dataset):
         return self.text_data[idx], self.image_data[idx], self.sensor_data[idx], self.targets[idx]
 
 # --- Training Function ---
-def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, device='cpu', save_path='./model_checkpoint.pth'):
+def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, device='cpu', save_path='./model_checkpoint.safetensors'):
     model.to(device)
     # Check for cuda for GradScaler
     is_cuda = 'cuda' in str(device)
@@ -198,8 +199,10 @@ def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, devic
         logging.info("Epoch [%d/%d] Average Loss: %.4f", epoch + 1, epochs, avg_loss)
 
         if (epoch + 1) % 5 == 0:
-            # Note: We use torch.save here. Ensure to use weights_only=True when loading.
-            torch.save(model.state_dict(), save_path) # nosec
+            # Note: Use safetensors for secure saving.
+            # We clone tensors to avoid issues with shared memory.
+            state_dict = {k: v.clone().contiguous() for k, v in model.state_dict().items()}
+            save_file(state_dict, save_path)
             logging.info("Checkpoint saved to %s", save_path)
 
 # --- Main Execution ---

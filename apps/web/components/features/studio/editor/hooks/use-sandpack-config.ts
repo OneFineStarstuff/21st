@@ -116,7 +116,6 @@ export function SecondDemo() {
           return normalizedPath === cachedPath
         })
       ) {
-        console.log(
           "[useSandpackConfig] Restoring cached content for:",
           cachedPath,
         )

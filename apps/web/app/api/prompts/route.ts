@@ -62,21 +62,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log("Received request:", {
-      prompt_type,
-      demo_id,
-      rule_id,
-      additional_context,
-    })
-
     if (!prompt_type || !demo_id) {
       return NextResponse.json(
         { error: "prompt_type and demo_id are required" },
         { status: 400 },
       )
     }
-
-    console.log("Fetching demo data for:", demo_id)
 
     // Fetch component data from Supabase
     const { data: demo, error: demoError } = await supabase
@@ -136,15 +127,6 @@ export async function POST(request: NextRequest) {
         demo?.demo_direct_registry_dependencies,
       )
 
-    console.log(
-      "Resolved component registry dependencies:",
-      resolvedComponentRegistryDependencies,
-    )
-    console.log(
-      "resolvedDemoRegistryDependencies,",
-      resolvedDemoRegistryDependenciesK,
-    )
-
     const transformedFlatRegistryDependencies = {
       ...transformToFlatDependencyTree(resolvedComponentRegistryDependencies),
       ...transformToFlatDependencyTree(resolvedDemoRegistryDependenciesK),
@@ -171,15 +153,9 @@ export async function POST(request: NextRequest) {
       {} as Record<string, string>,
     )
 
-    console.log(
-      "Resolved flat registry dependencies:",
-      resolvedFlatRegistryDependencies,
-    )
-
     // If rule_id is provided, fetch the rule template
     let ruleData = null
     if (rule_id) {
-      console.log("Fetching rule template for rule_id:", rule_id)
       const { data: rule, error: ruleError } = await supabase
         .from("prompt_rules")
         .select("tech_stack, theme, additional_context")
@@ -191,7 +167,6 @@ export async function POST(request: NextRequest) {
       }
 
       if (rule) {
-        console.log("Found rule data:", JSON.stringify(rule, null, 2))
         ruleData = rule
       }
     }
@@ -228,9 +203,6 @@ export async function POST(request: NextRequest) {
     }
 
     let prompt = getComponentInstallPrompt(promptParams)
-    console.log("Generated prompt content:", prompt.substring(0, 500) + "...")
-
-    console.log("Base prompt generated")
 
     return NextResponse.json({
       prompt,

@@ -66,7 +66,7 @@ export const ComponentForm = ({
 
     const style = window.getComputedStyle(textarea)
     const borderHeight =
-      parseInt(style.borderTopWidth) + parseInt(style.borderBottomWidth)
+      parseInt(style.borderTopWidth, 10) + parseInt(style.borderBottomWidth, 10)
 
     const newHeight = textarea.scrollHeight + borderHeight
 
@@ -177,13 +177,13 @@ export const ComponentForm = ({
                     ref={(e) => {
                       if (e) {
                         const style = window.getComputedStyle(e)
-                        const lineHeight = parseInt(style.lineHeight)
+                        const lineHeight = parseInt(style.lineHeight, 10)
                         const borderHeight =
-                          parseInt(style.borderTopWidth) +
-                          parseInt(style.borderBottomWidth)
+                          parseInt(style.borderTopWidth, 10) +
+                          parseInt(style.borderBottomWidth, 10)
                         const paddingHeight =
-                          parseInt(style.paddingTop) +
-                          parseInt(style.paddingBottom)
+                          parseInt(style.paddingTop, 10) +
+                          parseInt(style.paddingBottom, 10)
                         const initialHeight =
                           lineHeight * defaultRows +
                           borderHeight +

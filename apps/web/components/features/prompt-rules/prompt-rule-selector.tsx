@@ -36,7 +36,7 @@ export function PromptRuleSelector({
   return (
     <Select
       value={value?.toString()}
-      onValueChange={(value) => onChange(value ? parseInt(value) : undefined)}
+      onValueChange={(value) => onChange(value ? parseInt(value, 10) : undefined)}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Select prompt rule...">

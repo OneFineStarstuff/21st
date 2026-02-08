@@ -17,7 +17,6 @@ const openai = new OpenAI({
   apiKey: Deno.env.get("OPENAI_API_KEY"),
 })
 
-console.log("Hello from Functions!")
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,7 +24,6 @@ Deno.serve(async (req) => {
   }
 
   const { search, match_threshold } = await req.json()
-  console.log("Search query:", search)
 
   if (match_threshold && (match_threshold < 0.1 || match_threshold > 0.99)) {
     return new Response(
@@ -43,7 +41,6 @@ Deno.serve(async (req) => {
     encoding_format: "float",
   })
   const output = embeddingResponse.data[0].embedding
-  console.log("Embedding output:", output)
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -52,7 +49,6 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: req.headers.get("Authorization")! } },
     },
   )
-  console.log("Supabase client initialized")
 
   // Get the search results using the updated function
   const { data: searchResults, error } = await supabase.rpc(
@@ -72,7 +68,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log("Search results with user data:", searchResults)
 
   return new Response(JSON.stringify(searchResults), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

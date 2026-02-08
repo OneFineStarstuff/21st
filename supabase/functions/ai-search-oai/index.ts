@@ -18,7 +18,6 @@ Deno.serve(async (req) => {
   }
 
   const { search, match_threshold } = await req.json()
-  console.log("Search query:", search)
 
   if (match_threshold && (match_threshold < 0.1 || match_threshold > 0.99)) {
     return new Response(
@@ -36,7 +35,6 @@ Deno.serve(async (req) => {
     encoding_format: "float",
   })
   const output = embeddingResponse.data[0].embedding
-  console.log("Embedding output:", output)
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -45,7 +43,6 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: req.headers.get("Authorization")! } },
     },
   )
-  console.log("Supabase client initialized")
 
   const { data: searchResults, error } = await supabase.rpc(
     "search_demos_ai_oai_extended",
@@ -64,7 +61,6 @@ Deno.serve(async (req) => {
     })
   }
 
-  console.log("Search results:", searchResults)
 
   return new Response(JSON.stringify(searchResults), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -451,7 +451,6 @@ export function ComponentsList({
       break
     }
     case "collection": {
-      console.log("[ComponentsList] Collection case:", {
         collectionId: props.collectionId,
         sortBy: props.sortBy,
       })
@@ -464,7 +463,6 @@ export function ComponentsList({
           props.sortBy,
         ] as const,
         queryFn: async () => {
-          console.log(
             "[ComponentsList] Fetching collection components with params:",
             {
               p_collection_id: props.collectionId,
@@ -488,9 +486,7 @@ export function ComponentsList({
             throw error
           }
 
-          console.log("[ComponentsList] Raw components data:", components)
           const transformedData = (components || []).map(transformDemoResult)
-          console.log(
             "[ComponentsList] Transformed components:",
             transformedData,
           )
