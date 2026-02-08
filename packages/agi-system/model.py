@@ -25,6 +25,7 @@ class DynamicRouter(nn.Module):
         self.experts = nn.ModuleList([nn.Linear(input_dim, output_dim) for _ in range(num_experts)])
 
     def forward(self, x):
+        """Computes the weighted sum of expert outputs based on gate scores."""
         gate_scores = F.softmax(self.gate(x), dim=-1)
         output = sum(expert(x) * gate_scores[:, i].unsqueeze(1) for i, expert in enumerate(self.experts))
         return output
@@ -49,6 +50,7 @@ class PerceptionModule(nn.Module):
         self.cross_attention = nn.MultiheadAttention(embed_dim=hidden_dim, num_heads=2)
 
     def forward(self, text, image, sensor):
+        """Processes text, image, and sensor data to produce cross-attention output."""
         text_features = self.text_fc(self.text_model(text).last_hidden_state.mean(dim=1))
         image_features = self.image_fc(self.image_model(image))
         sensor_features = self.sensor_fc(sensor)
@@ -67,7 +69,17 @@ class AdvancedDNC(nn.Module):
         self.dynamic_router = DynamicRouter(hidden_size, hidden_size)
 
     def forward(self, input_seq, hidden_state=None):
+        """Processes the input sequence through the LSTM and returns the routed output.
+        
+        Args:
+            input_seq: The input sequence tensor.
+            hidden_state: The initial hidden state (optional).
+        
+        Returns:
+            A tuple containing the routed output and the hidden state.
+        """
         def lstm_forward(x, h_s):
+            """Perform a forward pass through the LSTM layer."""
             return self.lstm(x, h_s)
 
         # Handle None hidden state for checkpointing
@@ -105,6 +117,7 @@ class DecisionMakingModule(nn.Module):
 
     def forward(self, features):
         # features: (batch, input_dim)
+        """Processes input features to generate policy logits and value estimates."""
         features = self.performer(features.unsqueeze(1)) # (batch, 1, input_dim)
         features_sq = features.squeeze(1)
         policy_logits = self.policy(features_sq)
@@ -127,16 +140,30 @@ class UnifiedAGISystem(nn.Module):
         self.decision_making_module = DecisionMakingModule(hidden_dim, output_dim)
 
     def forward(self, text, image, sensor):
+        """Processes input data through perception, memory, and decision-making modules."""
         features = self.perception_module(text, image, sensor)
         memory_output, _ = self.memory_module(features.unsqueeze(1))
         policy_logits, value_estimate = self.decision_making_module(memory_output)
         return policy_logits, value_estimate
 
     def explain_decision(self, text_input, image_tensor, sensor_tensor, target_class=0):
+        """Compute attributions for the decision-making process.
+        
+        Args:
+            text_input: Input text for perception.
+            image_tensor: Input image tensor for perception.
+            sensor_tensor: Input sensor tensor for perception.
+            target_class: The target class for attribution (default is 0).
+        
+        Returns:
+            Attributions for the decision-making process.
+        """
         features = self.perception_module(text_input, image_tensor, sensor_tensor)
 
         # Define a wrapper for IntegratedGradients to attribute from perception features to policy output
         def forward_path(feat):
+            """Compute logits from perception features using memory and decision-making
+            modules."""
             mem_out, _ = self.memory_module(feat.unsqueeze(1))
             logits, _ = self.decision_making_module(mem_out)
             return logits
@@ -204,6 +231,15 @@ def train(model, train_loader, optimizer, scheduler, criterion, epochs=10, devic
 
 # --- Main Execution ---
 def main():
+    """Main function to execute the training of the UnifiedAGISystem model.
+    
+    This function initializes the device for computation, generates synthetic data
+    for training, and sets up the data loader. It creates an instance of the
+    UnifiedAGISystem model and configures the optimizer and learning rate
+    scheduler.  The model is then trained using the specified parameters. After
+    training, the  model is evaluated, and attributions for a sample input are
+    logged.
+    """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     logging.info("Using device: %s", device)
 
