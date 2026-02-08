@@ -1,0 +1,11 @@
+{
+  "name": "@repo/agi-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "python3 -m unittest discover tests",
+    "train": "python3 model.py",
+    "benchmark": "python3 benchmark.py",
+    "lint": "bandit -r . && flake8 ."
+  }
+}

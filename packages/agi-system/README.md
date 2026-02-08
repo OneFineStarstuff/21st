@@ -19,8 +19,17 @@ pip install -r requirements.txt
 To train the model with synthetic data:
 
 ```bash
-python model.py
+python3 model.py
 ```
+
+## Automation & Monorepo Integration
+
+This package is integrated into the workspace monorepo and can be managed via `pnpm` and `turbo`.
+
+- **Test**: `pnpm test` (Runs automated unit tests)
+- **Benchmark**: `pnpm run benchmark` (Measures inference performance)
+- **Lint**: `pnpm run lint` (Static analysis and security scanning)
+- **Train**: `pnpm run train` (Standard training pipeline)
 
 ## Features
 
