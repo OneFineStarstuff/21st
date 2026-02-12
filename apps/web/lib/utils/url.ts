@@ -16,7 +16,7 @@ export const addVersionToUrl = (
   const currentVersion = params.get("v")
 
   if (currentVersion) {
-    const nextVersion = parseInt(currentVersion) + 1
+    const nextVersion = parseInt(currentVersion, 10) + 1
     params.set("v", nextVersion.toString())
   } else {
     params.set("v", initialVersion.toString())

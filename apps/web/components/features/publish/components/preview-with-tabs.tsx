@@ -75,7 +75,7 @@ export function DemoPreviewTabs({
       return
     }
 
-    const currentIndex = parseInt(activeTab.replace("demo-", "", 10))
+    const currentIndex = parseInt(activeTab.replace("demo-", ""), 10)
     if (currentIndex >= demos.length) {
       setActiveTab(`demo-${demos.length - 1}`)
     }

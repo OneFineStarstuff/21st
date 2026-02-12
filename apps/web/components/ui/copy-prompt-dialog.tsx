@@ -48,7 +48,7 @@ export function CopyPromptDialog({
   >(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem(STORAGE_KEY)
-      return saved ? parseInt(saved) : undefined
+      return saved ? parseInt(saved, 10) : undefined
     }
     return undefined
   })
@@ -188,7 +188,7 @@ export function CopyPromptDialog({
               value={selectedRuleId?.toString() || "default"}
               onValueChange={(value) =>
                 setSelectedRuleId(
-                  value && value !== "default" ? parseInt(value) : undefined,
+                  value && value !== "default" ? parseInt(value, 10) : undefined,
                 )
               }
               disabled={isLoadingRules}
