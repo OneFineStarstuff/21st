@@ -30,17 +30,17 @@
 
 ### Executive Decisions Required
 
-#### Option A: Tiered Model Routing & Top-K Reduction
-*   **Technical Implication:** Deploy a "Classifier" layer to route 70% of simple queries to GPT-3.5/Llama-3 and reserve GPT-4 for complex reasoning. Reduce retrieval `top-k` from 10 to 5.
-*   **Pros:** Immediate 30% reduction in token burn; negligible latency improvement.
-*   **Cons:** Potential 2-3% drop in "long-tail" accuracy for complex queries.
-*   **Recommendation:** **Approve.** Financial runway is currently critical to reach GA.
+#### Option A: Tiered Model Routing & Retrieval Top-K Reduction
+*   **Technical Implication:** Implement a dynamic router to intercept 70% of high-volume, low-complexity queries and redirect to GPT-3.5-Turbo/Llama-3-70B. Concurrently reduce vector retrieval `top-k` from 10 to 4 chunks per query.
+*   **Pros:** Immediate ~35% reduction in token costs; ~150ms reduction in P95 inference latency.
+*   **Cons:** Potential marginal decay (est. 1.5%) in retrieval recall for highly technical multi-hop queries.
+*   **Recommendation:** **Approve.** Necessary to normalize the $30k burn variance before GA rollout.
 
-#### Option B: Context Window Quantization & Summarization
-*   **Technical Implication:** Implement a recursive summarization layer for long documents before insertion into the prompt context window, rather than raw chunking.
-*   **Pros:** Significant reduction in input tokens per query; cleaner context for LLM.
-*   **Cons:** Higher initial compute overhead for summarization; risk of information loss.
-*   **Recommendation:** **Reject.** High implementation complexity will further delay the timeline.
+#### Option B: Model Quantization & Local Inference Hosting
+*   **Technical Implication:** Migrate complex reasoning tasks from OpenAI API to self-hosted vLLM instances running 4-bit AWQ quantized Llama-3-405B on internal H100 clusters.
+*   **Pros:** Eliminates per-token pricing model; enhances long-term OpEx predictability; improves data sovereignty compliance.
+*   **Cons:** Requires $150k upfront CapEx for GPU provisioning; adds 3 weeks to infrastructure workstream; significantly increases DevOps overhead.
+*   **Recommendation:** **Reject.** Does not address immediate budget overrun and risks further schedule slippage.
 
 ### Forward Look (Next Week)
 *   Finalize Pinecone index optimization for multi-tenant isolation.
