@@ -8,18 +8,47 @@ This package contains the Unified AGI System, a multimodal model combining text,
 - **Memory Module**: An Advanced DNC using LSTM and a dynamic memory matrix.
 - **Decision Making Module**: Uses a Performer (Fast Attention) and Reinforcement Learning policy/value heads.
 
-## Installation
+## Deployment
+
+### Local Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Usage
-
-To train the model with synthetic data:
+### Running the Inference Server
 
 ```bash
-python3 model.py
+# Start the FastAPI server
+uvicorn server:app --host 0.0.0.0 --port 8000
+```
+
+### API Usage
+
+**POST /predict**
+
+Accepts multipart/form-data:
+- `text_ids`: Comma-separated token IDs (e.g., "1,2,3,4")
+- `sensor_data`: Comma-separated floats (e.g., "0.1,0.5,0.9,1.0,0.2,0.3,0.4,0.5,0.6,0.7")
+- `image`: Image file (PNG/JPEG)
+
+Example using `curl`:
+```bash
+curl -X POST "http://localhost:8000/predict" \
+     -H "Content-Type: multipart/form-data" \
+     -F "text_ids=1,2,3,4" \
+     -F "sensor_data=0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0" \
+     -F "image=@preview.png"
+```
+
+### Docker Deployment
+
+```bash
+# Build the image
+docker build -t agi-inference-server .
+
+# Run the container
+docker run -p 8000:8000 agi-inference-server
 ```
 
 ## Automation & Monorepo Integration
@@ -37,3 +66,4 @@ This package is integrated into the workspace monorepo and can be managed via `p
 - **Dynamic Routing**: Mixture of Experts for efficient computation.
 - **Gradient Checkpointing**: Memory-efficient training.
 - **Explainability**: Integrated Gradients for decision attribution.
+- **Production-Ready API**: FastAPI serving layer with container support.
