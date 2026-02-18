@@ -1,6 +1,9 @@
 import unittest
 import torch
-from model import DynamicRouter, PerceptionModule, AdvancedDNC, DecisionMakingModule, UnifiedAGISystem
+from model import (
+    DynamicRouter, PerceptionModule, AdvancedDNC, UnifiedAGISystem
+)
+
 
 class TestAGISystem(unittest.TestCase):
     def test_dynamic_router(self):
@@ -48,6 +51,7 @@ class TestAGISystem(unittest.TestCase):
         logits, value = model(text, image, sensor)
         self.assertEqual(logits.shape, (1, 10))
         self.assertEqual(value.shape, (1, 1))
+
 
 if __name__ == '__main__':
     unittest.main()

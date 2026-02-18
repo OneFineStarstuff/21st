@@ -1,9 +1,10 @@
+import logging
 import torch
 import time
-import logging
 from model import UnifiedAGISystem
 
 logging.basicConfig(level=logging.INFO)
+
 
 def benchmark():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -30,7 +31,9 @@ def benchmark():
     end_time = time.time()
     avg_time = (end_time - start_time) / num_runs
 
-    logging.info(f"Average inference time over {num_runs} runs: {avg_time*1000:.2f} ms")
+    logging.info("Average inference time over %d runs: %.2f ms",
+                 num_runs, avg_time * 1000)
+
 
 if __name__ == "__main__":
     benchmark()
