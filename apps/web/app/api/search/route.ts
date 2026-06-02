@@ -1,55 +1,22 @@
-import { createClient } from "@supabase/supabase-js"
 import { NextRequest, NextResponse } from "next/server"
 import { SearchResponse } from "@/types/global"
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-)
+import { getSearchSupabaseClient, validateSearchApiKey } from "@/lib/search-utils"
 
 const SUPABASE_SEARCH_URL = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/ai-search-oai`
 
 export async function POST(request: NextRequest) {
-  const apiKey = request.headers.get("x-api-key")
-
-  if (!apiKey) {
-    return NextResponse.json({ error: "API key is required" }, { status: 401 })
-  }
+  const supabase = getSearchSupabaseClient()
+  const { success, keyCheck, error, status } = await validateSearchApiKey(request, supabase)
+  if (!success) return NextResponse.json({ error }, { status })
 
   try {
-    // Check API key
-    const { data: keyCheck, error: keyError } = await supabase.rpc(
-      "check_api_key",
-      { api_key: apiKey },
-    )
-
-    if (keyError) {
-      console.error("API key check error:", keyError)
-      return NextResponse.json(
-        { error: "Error validating API key" },
-        { status: 401 },
-      )
-    }
-
-    if (!keyCheck?.valid) {
-      return NextResponse.json(
-        { error: keyCheck?.error || "Invalid API key" },
-        { status: 401 },
-      )
-    }
-
-    // Get search query and pagination params
     const body = await request.json()
     const { search, page = 1, per_page = 20 } = body
 
     if (!search) {
-      return NextResponse.json(
-        { error: "Search query is required" },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: "Search query is required" }, { status: 400 })
     }
 
-    // Call Supabase search function
     const response = await fetch(SUPABASE_SEARCH_URL, {
       method: "POST",
       headers: {
@@ -60,23 +27,12 @@ export async function POST(request: NextRequest) {
     })
 
     if (!response.ok) {
-      console.error("Supabase search error:", {
-        status: response.status,
-        statusText: response.statusText,
-      })
-      const errorText = await response.text()
-      console.error("Error response:", errorText)
-      throw new Error(`Failed to fetch from Supabase: ${errorText}`)
+      throw new Error(`Failed to fetch from Supabase: ${await response.text()}`)
     }
 
     const data = await response.json()
+    if (!Array.isArray(data)) throw new Error("Unexpected response format")
 
-    if (!Array.isArray(data)) {
-      console.error("Unexpected data format:", data)
-      throw new Error("Unexpected response format from search")
-    }
-
-    // Filter and transform data
     const transformedResults = data
       .map((item: any) => ({
         name: item.name || "",
@@ -99,12 +55,8 @@ export async function POST(request: NextRequest) {
       .sort((a, b) => b.usage_count - a.usage_count)
 
     const total = transformedResults.length
-    const total_pages = Math.ceil(total / per_page)
-    const start = (page - 1) * per_page
-    const end = start + per_page
-    const results = transformedResults.slice(start, end)
+    const results = transformedResults.slice((page - 1) * per_page, page * per_page)
 
-    // Return filtered results with metadata
     return NextResponse.json<SearchResponse>({
       results,
       metadata: {
@@ -114,18 +66,11 @@ export async function POST(request: NextRequest) {
           total,
           page,
           per_page,
-          total_pages,
+          total_pages: Math.ceil(total / per_page),
         },
       },
     })
   } catch (error) {
-    console.error("Search error:", error)
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

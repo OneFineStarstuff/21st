@@ -609,19 +609,7 @@ export const useSubmitComponent = () => {
       throw new Error("Component ID is missing after create/update.")
     }
 
-    // Link sandbox to component if it's a new component
-    if (state.isNewComponent) {
-      context.setPublishProgress("Linking sandbox to new component...")
-      const { error: updateSandboxError } = await context.supabase
-        .from("sandboxes")
-        .update({ component_id: componentIdToUse })
-        .eq("id", context.sandboxId)
-
-      if (updateSandboxError) {
-        console.error("Error updating sandbox link:", updateSandboxError)
-        toast.warning("Failed to link sandbox to the new component.")
-      }
-    }
+    // Link sandbox logic moved below to avoid duplication
 
     // Create or update submission entry for private components
     if (typeof componentIdToUse === "number") {
@@ -661,8 +649,8 @@ export const useSubmitComponent = () => {
       }
     }
 
-    // Update sandbox link if needed
-    if (!sandboxData?.component_id) {
+    // Update sandbox link if needed (e.g. new component or missing link)
+    if (state.isNewComponent || !sandboxData?.component_id) {
       context.setPublishProgress("Updating sandbox link...")
       const { error: updateSandboxError } = await context.supabase
         .from("sandboxes")

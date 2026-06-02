@@ -1,3 +1,4 @@
+import { postInternalApi } from "@/lib/api-fetch"
 import { useEffect, useState, useRef } from "react"
 import { Component, Tag, User } from "@/types/global"
 import { defaultTailwindConfig } from "@/lib/sandpack"
