@@ -1,6 +1,11 @@
 # 🚀 Welcome to 21st.dev!
 
-**[21st.dev](https://21st.dev)** is your go-to open-source community registry for **React UI components**! Whether you're a developer, designer, or just someone who loves building beautiful interfaces, 21st.dev is the place to **publish, discover, and install** minimal, modern, and reusable React components powered by **Tailwind CSS** and **Radix UI**.
+**[21st.dev](https://21st.dev)** is your go-to open-source community registry for **React UI components**!
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-7289da?logo=discord&logoColor=white)](https://discord.gg/Qx4rFunHfm)
+
+---
 
 Inspired by the amazing [shadcn/ui](https://ui.shadcn.com/), we're here to make building UIs faster, easier, and more fun. 🎉
 
@@ -140,6 +145,8 @@ The project uses a modern stack:
 ---
 
 ## 🛠️ Contributing to 21st.dev
+For more details, please see our [Contributing Guide](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
+
 
 We're thrilled you want to contribute! Whether you're a seasoned developer or just starting out, there's a place for you here. Let's get you set up:
 
@@ -195,6 +202,12 @@ Before diving in, make sure you have:
 
 ---
 
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
+
 ## 👥 Team
 
 The project was developed by [@serafimcloud](https://x.com/serafimcloud), with significant contributions from [@daniel_dhawan](https://x.com/daniel_dhawan) and [@garrrikkotua](https://x.com/garrrikkotua).
@@ -223,6 +236,12 @@ And, of course, **YOU**—our amazing open-source contributors! ❤️
 ## 🚀 Let's Build the Future Together!
 
 Ready to dive in? Start exploring, publishing, and contributing today. Let's make 21st.dev the best place for React UI components on the web. Happy coding! 🎉
+
+## 📝 Citation
+
+If you use 21st.dev in your research or project, please cite it using the metadata in [CITATION.cff](CITATION.cff).
+
+---
 
 ## 📋 Component Guidelines
 

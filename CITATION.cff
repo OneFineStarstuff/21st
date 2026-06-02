@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Serafim"
+    given-names: "Cloud"
+    alias: "serafimcloud"
+  - family-names: "Dhawan"
+    given-names: "Daniel"
+    alias: "daniel_dhawan"
+  - family-names: "Kotua"
+    given-names: "Garrrik"
+    alias: "garrrikkotua"
+title: "21st.dev: The Open Source React UI Component Registry"
+version: 0.1.0
+date-released: 2025-01-01
+url: "https://github.com/serafimcloud/21st"

@@ -1,0 +1,18 @@
+{
+  "title": "21st.dev: The Open Source React UI Component Registry",
+  "description": "21st.dev is a community-driven platform for modern React UI components. It allows developers to publish, discover, and install components built with Tailwind CSS and Radix UI.",
+  "creators": [
+    {
+      "name": "Serafim Cloud",
+      "affiliation": "21st Labs Inc."
+    }
+  ],
+  "access_right": "open",
+  "license": "MIT",
+  "keywords": [
+    "react",
+    "ui-components",
+    "registry",
+    "open-source"
+  ]
+}
