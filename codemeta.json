@@ -1,0 +1,30 @@
+{
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "@type": "SoftwareSourceCode",
+  "name": "21st.dev",
+  "description": "The Open Source React UI Component Registry. 21st.dev is more than just a component registry – it's a community-driven platform for modern React UI components.",
+  "version": "0.1.0",
+  "codeRepository": "https://github.com/serafimcloud/21st",
+  "license": "https://spdx.org/licenses/MIT.html",
+  "programmingLanguage": [
+    "TypeScript",
+    "JavaScript",
+    "CSS"
+  ],
+  "author": [
+    {
+      "@type": "Person",
+      "givenName": "Serafim",
+      "familyName": "Cloud"
+    }
+  ],
+  "keywords": [
+    "react",
+    "ui",
+    "components",
+    "registry",
+    "shadcn",
+    "tailwind",
+    "radix-ui"
+  ]
+}

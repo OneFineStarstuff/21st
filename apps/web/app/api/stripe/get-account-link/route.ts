@@ -1,19 +1,17 @@
-import stripe, { getStripeId } from "@/lib/stripe"
+import stripe from "@/lib/stripe"
+import { getAuthenticatedStripeId } from "@/lib/stripe-auth"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET(request: NextRequest) {
-  try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+  const { userId, stripeId, errorResponse } = await getAuthenticatedStripeId()
+  if (errorResponse) return errorResponse
 
+  try {
     const { data: userData, error: userError } = await supabaseWithAdminAccess
       .from("users")
-      .select("*")
-      .eq("id", userId)
+      .select("display_username")
+      .eq("id", userId!)
       .single()
 
     if (userError) {
@@ -23,11 +21,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const stripeId = await getStripeId(userId)
     const returnUrl = `${process.env.NEXT_PUBLIC_APP_URL}/studio/${userData.display_username}/monetization`
 
     const accountLink = await stripe.accountLinks.create({
-      account: stripeId,
+      account: stripeId!,
       refresh_url: returnUrl,
       return_url: returnUrl,
       type: "account_onboarding",

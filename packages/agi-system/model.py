@@ -2,16 +2,16 @@ import logging
 import torch
 from torch import nn
 import torch.nn.functional as F
+from torch.amp import GradScaler, autocast
+from torch.distributions import Categorical
+from torch.optim import AdamW
+from torch.optim.lr_scheduler import OneCycleLR
+from torch.utils.checkpoint import checkpoint
 from torch.utils.data import DataLoader, Dataset
 from torchvision import models
 from transformers import GPT2Model
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import OneCycleLR
-from torch.amp import GradScaler, autocast
 from captum.attr import IntegratedGradients
 from performer_pytorch import Performer
-from torch.distributions import Categorical
-from torch.utils.checkpoint import checkpoint
 
 # --- Logger Setup ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
@@ -72,11 +72,11 @@ class AdvancedDNC(nn.Module):
         """Processes the input sequence through the LSTM and returns the routed output.
         
         Args:
-            input_seq: The input sequence tensor.
-            hidden_state: The initial hidden state (optional).
+            input_seq (torch.Tensor): The input sequence tensor.
+            hidden_state (tuple, optional): The initial hidden state (optional).
         
         Returns:
-            A tuple containing the routed output and the hidden state.
+            tuple: A tuple containing the routed output and the hidden state.
         """
         def lstm_forward(x, h_s):
             """Perform a forward pass through the LSTM layer."""
@@ -150,13 +150,13 @@ class UnifiedAGISystem(nn.Module):
         """Compute attributions for the decision-making process.
         
         Args:
-            text_input: Input text for perception.
-            image_tensor: Input image tensor for perception.
-            sensor_tensor: Input sensor tensor for perception.
-            target_class: The target class for attribution (default is 0).
+            text_input (torch.Tensor): Input text for perception.
+            image_tensor (torch.Tensor): Input image tensor for perception.
+            sensor_tensor (torch.Tensor): Input sensor tensor for perception.
+            target_class (int): The target class for attribution (default is 0).
         
         Returns:
-            Attributions for the decision-making process.
+            torch.Tensor: Attributions for the decision-making process.
         """
         features = self.perception_module(text_input, image_tensor, sensor_tensor)
 

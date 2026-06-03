@@ -96,22 +96,7 @@ async function updateSubscriptionStatuses() {
         if (isAfter(now, periodEnd)) {
           if (meta.will_cancel_at_end) {
             // Subscription was set to cancel - mark as inactive
-            await supabaseWithAdminAccess
-              .from("users_to_plans")
-              .update({
-                status: "inactive",
-                updated_at: now.toISOString(),
-              })
-              .eq("user_id", subscription.user_id)
-
-            // Reset to free tier usage limits
-            const freePlan = allPlans.find((plan) => plan.type === "free")
-            if (freePlan) {
-              await supabaseWithAdminAccess
-                .from("usages")
-                .update({ limit: freePlan.add_usage || 0 })
-                .eq("user_id", subscription.user_id)
-            }
+            await deactivateSubscription(subscription.user_id, now.toISOString(), allPlans)
 
             expired++
           } else {
@@ -147,22 +132,7 @@ async function updateSubscriptionStatuses() {
                   updated++
                 } else {
                   // Subscription is no longer active in Stripe
-                  await supabaseWithAdminAccess
-                    .from("users_to_plans")
-                    .update({
-                      status: "inactive",
-                      updated_at: now.toISOString(),
-                    })
-                    .eq("user_id", subscription.user_id)
-
-                  // Reset to free tier usage limits
-                  const freePlan = allPlans.find((plan) => plan.type === "free")
-                  if (freePlan) {
-                    await supabaseWithAdminAccess
-                      .from("usages")
-                      .update({ limit: freePlan.add_usage || 0 })
-                      .eq("user_id", subscription.user_id)
-                  }
+                  await deactivateSubscription(subscription.user_id, now.toISOString(), allPlans)
 
                   expired++
                 }
