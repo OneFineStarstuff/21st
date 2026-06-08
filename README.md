@@ -1,7 +1,7 @@
 # 🚀 Welcome to 21st.dev!
 
 **[21st.dev](https://21st.dev)** is your go-to open-source community registry for **React UI components**!
-Powered by **Omni-Sentinel**: The high-assurance governance and execution framework for cognitive systems. See [GOVERNANCE.md](GOVERNANCE.md) for architectural details.
+Powered by Omni-Sentinel. See [GOVERNANCE.md](GOVERNANCE.md).
 
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
