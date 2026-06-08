@@ -7,8 +7,6 @@ from safetensors.torch import save_file
 from torch import nn
 from torch.amp import GradScaler, autocast
 from torch.distributions import Categorical
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import OneCycleLR
 from torch.utils.checkpoint import checkpoint
 from torch.utils.data import DataLoader, Dataset
 from torchvision import models
@@ -406,7 +404,7 @@ class CustomDataset(Dataset):
 
 # --- Training Function ---
 def train(model: nn.Module, train_loader: DataLoader,
-          optimizer: AdamW, scheduler: OneCycleLR,
+          optimizer: torch.optim.AdamW, scheduler: torch.optim.lr_scheduler.OneCycleLR,
           criterion: nn.Module, epochs: int = 10,
           device: str = 'cpu',
           save_path: str = './model_checkpoint.safetensors'):
@@ -450,8 +448,7 @@ def train(model: nn.Module, train_loader: DataLoader,
 
             scaler.scale(scaled_loss).backward()
 
-            if (i + 1) % accumulation_steps == 0 or \
-               (i + 1) == len(train_loader):
+            if (i + 1) % accumulation_steps == 0 or                (i + 1) == len(train_loader):
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad()
@@ -496,8 +493,8 @@ def main():
     train_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
     model = UnifiedAGISystem(sensor_dim=sensor_dim, hidden_dim=512)
-    optimizer = AdamW(model.parameters(), lr=1e-4)
-    scheduler = OneCycleLR(
+    optimizer = torch.optim.AdamW(model.parameters(), lr=1e-4)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(
         optimizer, max_lr=1e-3, total_steps=len(train_loader) * 10
     )
     criterion = nn.CrossEntropyLoss()
