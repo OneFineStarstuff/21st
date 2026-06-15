@@ -3,44 +3,22 @@ import { UseFormReturn } from "react-hook-form"
 import type { TemplateFormData } from "../template/schema"
 import React from "react"
 import { useR2Upload } from "../hooks/use-r2-upload"
-
-async function convertVideoToMP4(file: File): Promise<File> {
-  const videoFormData = new FormData()
-  videoFormData.append("video", file)
-
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/convert`,
-      {
-        method: "POST",
-        body: videoFormData,
-      },
-    )
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || "Failed to process video")
-    }
-
-    const processedVideoBlob = await response.blob()
-
-    return new File(
-      [processedVideoBlob],
-      file.name.replace(/\.[^/.]+$/, ".mp4"),
-      {
-        type: "video/mp4",
-      },
-    )
-  } catch (error) {
-    return new File([file], file.name, { type: file.type })
-  }
-}
+import { convertVideoToMP4, handleVideoProcessing } from "@/lib/video-utils"
 
 export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
   const [isDragging, setIsDragging] = useState(false)
   const [isProcessingVideo, setIsProcessingVideo] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { upload: uploadToR2ClientSide } = useR2Upload()
+
+  const processSelectedFile = async (file: File, type: "image" | "video") => {
+    return handleVideoProcessing(file, form as any, type, {
+      imageUrl: "preview_image_data_url",
+      imageFile: "preview_image_file",
+      videoUrl: "preview_video_data_url",
+      videoFile: "preview_video_file",
+    }, setIsProcessingVideo)
+  }
 
   const handleFileChange = async (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -50,31 +28,7 @@ export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
     if (!file) {
       return
     }
-
-    const maxSize = type === "image" ? 5 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      const sizeInMb = maxSize / (1024 * 1024)
-      throw new Error(`File is too large. Maximum size is ${sizeInMb} MB`)
-    }
-
-    try {
-      const previewUrl = URL.createObjectURL(file)
-
-      if (type === "image") {
-        form.setValue("preview_image_data_url", previewUrl)
-        form.setValue("preview_image_file", file)
-      } else {
-        setIsProcessingVideo(true)
-        form.setValue("preview_video_data_url", previewUrl)
-        form.setValue("preview_video_file", file)
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      if (type === "video") {
-        setIsProcessingVideo(false)
-      }
-    }
+    await processSelectedFile(file, type)
   }
 
   const uploadToStorage = async (
@@ -123,30 +77,7 @@ export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
     const file = e.dataTransfer.files[0]
     if (!file) return
 
-    const maxSize = type === "image" ? 5 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      const sizeInMb = maxSize / (1024 * 1024)
-      throw new Error(`File is too large. Maximum size is ${sizeInMb} MB`)
-    }
-
-    try {
-      const previewUrl = URL.createObjectURL(file)
-
-      if (type === "image") {
-        form.setValue("preview_image_data_url", previewUrl)
-        form.setValue("preview_image_file", file)
-      } else {
-        setIsProcessingVideo(true)
-        form.setValue("preview_video_data_url", previewUrl)
-        form.setValue("preview_video_file", file)
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      if (type === "video") {
-        setIsProcessingVideo(false)
-      }
-    }
+    await processSelectedFile(file, type)
   }
 
   const handleClick = () => {

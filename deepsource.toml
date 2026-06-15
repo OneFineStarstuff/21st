@@ -1,0 +1,39 @@
+version = 1
+
+[[analyzers]]
+name = "javascript"
+enabled = true
+
+  [analyzers.meta]
+  runtime = "nodejs"
+  environment = ["browser", "nodejs"]
+  typescript = true
+
+[[analyzers]]
+name = "python"
+enabled = true
+
+  [analyzers.meta]
+  runtime = "python3"
+
+[[analyzers]]
+name = "sql"
+enabled = true
+
+  [analyzers.meta]
+  dialect = "postgres"
+
+[[analyzers]]
+name = "secret-scanner"
+enabled = true
+
+[exclude_patterns]
+patterns = [
+  "node_modules/**",
+  "dist/**",
+  ".next/**",
+  "pnpm-lock.yaml",
+  "yarn.lock",
+  "apps/web/public/**",
+  "**/*.log"
+]

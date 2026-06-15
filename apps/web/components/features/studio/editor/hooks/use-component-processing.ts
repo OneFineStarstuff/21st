@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react"
 import { toast } from "sonner"
 import { ActivePreview } from "./use-file-management"
+import { standardizeAdditionalStyles } from "@/lib/studio-utils"
 
 interface UseComponentProcessingProps {
   userId: string
@@ -74,7 +75,7 @@ export function useComponentProcessing({
           throw new Error(errorData.error || "Failed to process component")
         }
 
-        const data = await response.json()
+        let data = await response.json()
         console.log("Preprocess component response:", data)
 
         // Check if the API indicates that style updates are needed
@@ -87,20 +88,7 @@ export function useComponentProcessing({
             data.additionalStyles.tailwindExtensions = {}
           }
 
-          // Initialize all tailwind extension categories
-          const extensions = [
-            "colors",
-            "animations",
-            "fontFamily",
-            "borderRadius",
-            "boxShadow",
-            "spacing",
-          ]
-          extensions.forEach((ext) => {
-            if (!data.additionalStyles.tailwindExtensions[ext]) {
-              data.additionalStyles.tailwindExtensions[ext] = {}
-            }
-          })
+          data = standardizeAdditionalStyles(data)
 
           if (!data.additionalStyles.cssVariables) {
             data.additionalStyles.cssVariables = []
@@ -157,45 +145,6 @@ export function useComponentProcessing({
             // If required is true but there's nothing actually to add, this is a false positive
             // so we should set it to false
             data.additionalStyles.required = false
-          }
-
-          // Fix any undefined values in keyframes or utilities
-          if (data.additionalStyles.keyframes) {
-            data.additionalStyles.keyframes =
-              data.additionalStyles.keyframes.map((keyframe: any) => {
-                // Standardize keyframe structure - ensure we always use 'name' and 'frames'
-                const name = keyframe.name || keyframe.keyframeName || ""
-                const frames = keyframe.frames || keyframe.definition || ""
-
-                if (!frames || frames === "undefined") {
-                  // Provide a default example keyframe definition
-                  return {
-                    name,
-                    frames:
-                      "0% { opacity: 0; transform: scale(0.95); }\n100% { opacity: 1; transform: scale(1); }",
-                  }
-                }
-                return { name, frames }
-              })
-          }
-
-          if (data.additionalStyles.utilities) {
-            data.additionalStyles.utilities =
-              data.additionalStyles.utilities.map((utility: any) => {
-                // Standardize utility structure - ensure we always use 'className' and 'definition'
-                const className = utility.className || utility.name || ""
-                const definition =
-                  utility.definition || utility.properties || ""
-
-                if (!definition || definition === "undefined") {
-                  // Provide a default example utility definition
-                  return {
-                    className,
-                    definition: "/* Add your custom styles here */",
-                  }
-                }
-                return { className, definition }
-              })
           }
         }
 

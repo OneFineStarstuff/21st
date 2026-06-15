@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
+import { checkStripeAuth } from "@/lib/stripe-auth"
 import { stripeV1, stripeV2 } from "@/lib/stripe"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { Database } from "@/types/supabase"
@@ -22,14 +22,9 @@ interface UserPlanWithPlans {
 
 export async function POST(request: NextRequest) {
   try {
-    const authSession = await auth()
-    const userId = authSession?.userId
+    const { userId, response: authResponse } = await checkStripeAuth()
+    if (authResponse) return authResponse
 
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
-    // Get user's current subscription from Supabase
     const { data: userPlan, error: userPlanError } =
       await supabaseWithAdminAccess
         .from("users_to_plans")
@@ -55,12 +50,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Determine which Stripe instance to use based on plan version
     const planVersion = userPlan.plans?.version || 1
     const stripeInstance = planVersion === 1 ? stripeV1 : stripeV2
 
     try {
-      // Cancel the subscription in Stripe
       const subscription =
         await stripeInstance.subscriptions.cancel(subscriptionId)
 

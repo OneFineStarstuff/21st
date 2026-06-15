@@ -1,16 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      persistSession: false,
-    },
-  },
-)
+import { supabaseAdmin, getUserByUsername, checkUsernameTaken } from "@/lib/user-utils"
 
 export async function GET(req: Request) {
   try {
@@ -24,11 +14,7 @@ export async function GET(req: Request) {
       )
     }
 
-    const { data, error } = await supabaseAdmin
-      .from("users")
-      .select("*")
-      .or(`username.eq.${username},display_username.eq.${username}`)
-      .single()
+    const { data, error } = await getUserByUsername(username)
 
     if (error) {
       console.error("Error fetching user profile:", error)
@@ -84,13 +70,7 @@ export async function PATCH(req: Request) {
     let targetUserId = userId
     if (targetUsername) {
       console.log("Looking up user by username:", targetUsername)
-      const { data: userData, error: userError } = await supabaseAdmin
-        .from("users")
-        .select("id")
-        .or(
-          `username.eq.${targetUsername},display_username.eq.${targetUsername}`,
-        )
-        .single()
+      const { data: userData, error: userError } = await getUserByUsername(targetUsername)
 
       if (userError || !userData) {
         console.error("Error finding user by username:", userError)
@@ -130,13 +110,7 @@ export async function PATCH(req: Request) {
     }
 
     if (display_username) {
-      const { data: existingUsers, error: queryError } = await supabaseAdmin
-        .from("users")
-        .select("id")
-        .or(
-          `username.eq."${display_username}",display_username.eq."${display_username}"`,
-        )
-        .neq("id", targetUserId)
+      const { data: existingUsers, error: queryError } = await checkUsernameTaken(display_username, targetUserId)
 
       if (queryError) {
         console.error("Username validation error:", queryError)
@@ -255,14 +229,5 @@ export async function PATCH(req: Request) {
       { error: "Internal server error" },
       { status: 500 },
     )
-  }
-}
-
-function isValidUrl(url: string): boolean {
-  try {
-    new URL(url)
-    return true
-  } catch {
-    return false
   }
 }

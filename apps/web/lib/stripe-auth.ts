@@ -1,25 +1,31 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { getStripeId } from "./stripe"
 
-export async function getAuthenticatedStripeId() {
-  const { userId } = await auth()
+export async function checkStripeAuth() {
+  const authSession = await auth()
+  const userId = authSession?.userId
   if (!userId) {
-    return { userId: null, stripeId: null, errorResponse: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+    return { userId: null, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
   }
+  return { userId, response: null }
+}
 
-  try {
-    const stripeId = await getStripeId(userId)
-    return { userId, stripeId, errorResponse: null }
-  } catch (error) {
-    console.error("Failed to get stripe ID:", error)
+export async function validateCheckoutRequest(req: Request, schema: any) {
+  const { userId, response: authResponse } = await checkStripeAuth()
+  if (authResponse) return { userId: null, data: null, response: authResponse }
+
+  const body = await req.json()
+  const validationResult = schema.safeParse(body)
+  if (!validationResult.success) {
     return {
       userId,
-      stripeId: null,
-      errorResponse: NextResponse.json(
-        { error: "Failed to get stripe account" },
-        { status: 500 }
+      data: null,
+      response: NextResponse.json(
+        { error: "Invalid request data", details: validationResult.error.errors },
+        { status: 400 }
       )
     }
   }
+
+  return { userId, data: validationResult.data, response: null }
 }
