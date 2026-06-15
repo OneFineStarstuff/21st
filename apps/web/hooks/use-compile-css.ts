@@ -18,34 +18,28 @@ export const useCompileCss = (
   globalCss?: string,
   compiledCss?: string | null,
 ) => {
+  const [css, setCss] = useState<string | null>(compiledCss || null)
+  const [isCompiling, setIsCompiling] = useState(false)
   const client = useClerkSupabaseClient()
-  const [css, setCss] = useState<string | null>(compiledCss ?? null)
 
   useEffect(() => {
-    if (css) return
-    if (!shellCode) return
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/compile-css`, {
-      method: "POST",
-      body: JSON.stringify({
-        code,
-        demoCode,
-        baseTailwindConfig: defaultTailwindConfig,
-        baseGlobalCss: defaultGlobalCss,
-        dependencies: Object.values(registryDependencies ?? {}).concat(
-          shellCode,
-        ),
-        customTailwindConfig: tailwindConfig,
-        customGlobalCss: globalCss,
-      }),
+    if (compiledCss) return
+
+    setIsCompiling(true)
+    postInternalApi("/api/bundle", {
+      code,
+      demoCode,
+      baseTailwindConfig: defaultTailwindConfig,
+      baseGlobalCss: defaultGlobalCss,
+      dependencies: Object.values(registryDependencies ?? {}).concat(
+        shellCode,
+      ),
+      customTailwindConfig: tailwindConfig,
+      customGlobalCss: globalCss,
     })
-      .then((res) => res.json())
       .then((data) => {
-        if (data.error) {
-          throw new Error(data.error)
-        } else {
-          setCss(data.css)
-          return data.css
-        }
+        setCss(data.css)
+        return data.css
       })
       .then(async (compiledCss) => {
         if (component.id && demoId) {
@@ -58,36 +52,28 @@ export const useCompileCss = (
             return
           }
           const timestamp = new Date().toISOString()
-          const fileName = `${component.component_slug}/${demoSlug}/compiled.${timestamp}.css`
-          const url = await uploadToR2({
-            file: {
-              name: fileName,
-              type: "text/plain",
-              textContent: compiledCss,
-            },
-            fileKey: `${component.user_id}/${fileName}`,
+          const fileName = `${component.user.username}/${component.component_slug}/${demoSlug}/${timestamp}.css`
+
+          const uploadResult = await uploadToR2({
+            file: new File([compiledCss], fileName, { type: "text/css" }),
+            fileKey: fileName,
             bucketName: "components-code",
+            contentType: "text/css",
           })
 
-          const { error: updateError } = await client
-            .from("demos")
-            .update({
-              compiled_css: url,
-              updated_at: new Date().toISOString(),
-            })
-            .eq("id", demoId)
-            .eq("component_id", component.id)
-
-          if (updateError) {
-            console.error(
-              "Failed to update demo with compiled CSS:",
-              updateError,
-            )
+          if (uploadResult) {
+            await client
+              .from("demos")
+              .update({ compiled_css_url: uploadResult })
+              .eq("id", demoId)
           }
         }
       })
       .catch((error) => {
-        console.error("Error in CSS compilation or upload:", error)
+        console.error("Error compiling CSS:", error)
+      })
+      .finally(() => {
+        setIsCompiling(false)
       })
   }, [
     code,
@@ -95,10 +81,9 @@ export const useCompileCss = (
     registryDependencies,
     tailwindConfig,
     globalCss,
-    component,
-    shellCode,
+    component.id,
     demoId,
   ])
 
-  return css
+  return { css, isCompiling }
 }

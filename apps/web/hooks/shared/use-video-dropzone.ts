@@ -2,33 +2,7 @@ import { useState } from "react"
 import { useDropzone } from "react-dropzone"
 import { UseFormReturn } from "react-hook-form"
 import type { FormData } from "../config/utils"
-
-async function convertVideoToMP4(file: File): Promise<File> {
-  const videoFormData = new FormData()
-  videoFormData.append("video", file)
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/convert`,
-    {
-      method: "POST",
-      body: videoFormData,
-    },
-  )
-
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(error.message || "Failed to process video")
-  }
-
-  const processedVideoBlob = await response.blob()
-  return new File(
-    [processedVideoBlob],
-    file.name.replace(/\.[^/.]+$/, ".mp4"),
-    {
-      type: "video/mp4",
-    },
-  )
-}
+import { convertVideoToMP4, handleVideoProcessing } from "@/lib/video-utils"
 
 export function useVideoDropzone({
   form,
@@ -43,48 +17,31 @@ export function useVideoDropzone({
   )
 
   const handleVideoChange = async (file: File) => {
-    if (file.size > 50 * 1024 * 1024) {
-      alert("File is too large. Maximum size is 50 MB.")
-      return
-    }
-
     try {
-      setIsProcessingVideo(true)
-      const previewUrl = URL.createObjectURL(file)
-
-      console.log("🎥 Before setting video file:", {
-        file,
-        previewUrl,
-      })
-
-      form.setValue(`demos.${demoIndex}.preview_video_data_url`, previewUrl)
-      form.setValue(`demos.${demoIndex}.preview_video_file`, file)
+      await handleVideoProcessing(file, form as any, "video", {
+        imageUrl: `demos.${demoIndex}.preview_image_data_url`,
+        imageFile: `demos.${demoIndex}.preview_image_file`,
+        videoUrl: `demos.${demoIndex}.preview_video_data_url`,
+        videoFile: `demos.${demoIndex}.preview_video_file`,
+      }, setIsProcessingVideo)
 
       const processedFile = await convertVideoToMP4(file)
-      console.log("🎥 After processing video:", {
-        processedFile,
-        size: processedFile.size,
-        type: processedFile.type,
-      })
-
-      form.setValue(`demos.${demoIndex}.preview_video_file`, processedFile)
-    } catch (error) {
+      form.setValue(`demos.${demoIndex}.preview_video_file`, processedFile as any)
+    } catch (error: any) {
       console.error("Error processing video:", error)
-      alert("Error processing video. Please try again.")
-      form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined)
-      form.setValue(`demos.${demoIndex}.preview_video_file`, undefined)
-    } finally {
-      setIsProcessingVideo(false)
+      alert(error.message || "Error processing video. Please try again.")
+      form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined as any)
+      form.setValue(`demos.${demoIndex}.preview_video_file`, undefined as any)
     }
   }
 
   const removeVideo = () => {
     const videoUrl = form.getValues(`demos.${demoIndex}.preview_video_data_url`)
     if (videoUrl) {
-      URL.revokeObjectURL(videoUrl)
+      URL.revokeObjectURL(videoUrl as string)
     }
-    form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined)
-    form.setValue(`demos.${demoIndex}.preview_video_file`, undefined)
+    form.setValue(`demos.${demoIndex}.preview_video_data_url`, undefined as any)
+    form.setValue(`demos.${demoIndex}.preview_video_file`, undefined as any)
   }
 
   const {

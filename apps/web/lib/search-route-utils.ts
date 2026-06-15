@@ -9,8 +9,8 @@ export async function handleCommonSearch(
   options: {
     functionName: string,
     defaultLimit: number,
-    additionalBodyFields?: (body: any) => any,
-    sortResults?: (results: any[]) => any[],
+    additionalBodyFields?: (_body: any) => any,
+    sortResults?: (_results: any[]) => any[],
     includeSimilarity?: boolean,
     promptRuleId?: string
   }
@@ -52,7 +52,8 @@ export async function handleCommonSearch(
       return NextResponse.json({ error: "Error fetching search results" }, { status: 500 })
     }
 
-    const searchResultsTruncated = searchResults.slice(0, limit)
+    const resultsArray = searchResults as any[]
+    const searchResultsTruncated = resultsArray.slice(0, limit)
 
     const { data: demos, error: demosError } = await supabase
       .from("demos")

@@ -1,75 +1,13 @@
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
+import { demoSchema, formSchema } from "../../publish/config/schemas"
 import {
   formatComponentName,
   isFormValid,
   TagOption,
 } from "../../publish/config/utils"
 
-const demoSchema = z.object({
-  name: z.string().min(2, {
-    message: "Demo name must be at least 2 characters.",
-  }),
-  demo_slug: z.string().min(1, {
-    message: "Demo slug is required.",
-  }),
-  preview_image_data_url: z
-    .string({
-      required_error: "Cover image is required.",
-    })
-    .min(1, {
-      message: "Cover image is required.",
-    }),
-  preview_video_data_url: z.string().optional(),
-  preview_video_file: z.instanceof(File).optional(),
-  tags: z
-    .array(
-      z.object({
-        id: z.number().optional(),
-        name: z.string(),
-        slug: z.string(),
-      }),
-    )
-    .min(1, {
-      message: "At least one tag is required.",
-    }),
-  demo_direct_registry_dependencies: z.array(z.string()).default([]),
-  demo_dependencies: z.record(z.string()).default({}),
-  tailwind_config: z.string().optional(),
-  global_css: z.string().optional(),
-})
-
-export const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  component_slug: z.string().min(2, {
-    message: "Slug must be at least 2 characters.",
-  }),
-  demos: z.array(demoSchema).default([]),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  license: z.string(),
-  website_url: z.string().optional(),
-  is_public: z.boolean(),
-  unknown_dependencies: z.array(z.string()).default([]),
-  unknown_dependencies_with_metadata: z
-    .array(
-      z.object({
-        slugWithUsername: z.string(),
-        registry: z.string(),
-        isDemoDependency: z.boolean(),
-      }),
-    )
-    .default([]),
-  direct_registry_dependencies: z.array(z.string()).default([]),
-  registry: z.string(),
-  publish_as_username: z.string().optional(),
-  slug_available: z.boolean().optional(),
-  tailwind_config: z.string().optional(),
-  globals_css: z.string().optional(),
-})
+export { demoSchema, formSchema }
 
 export type FormData = {
   name: string

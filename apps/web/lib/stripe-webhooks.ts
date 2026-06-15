@@ -255,7 +255,7 @@ export async function handleCheckoutSession(
     throw new Error("No status got from event")
   }
 
-  const paymentIntent = event.data.object
+  const paymentIntent = event.data.object as any
   if (!paymentIntent.metadata) {
     throw new Error("No metadata found in event")
   }
@@ -346,10 +346,36 @@ export async function handleCheckoutSession(
 
 export async function processStripeWebhook(
   event: Stripe.Event,
-  handlers: Record<string, (event: any) => Promise<void>>
+  handlers: Record<string, (_event: any) => Promise<void>>
 ) {
   const handler = handlers[event.type]
   if (handler) {
     await handler(event)
   }
+}
+
+import { NextRequest, NextResponse } from "next/server"
+import { getStripeEvent } from "@/lib/stripe-utils"
+
+export async function handleStripeWebhookRoute(
+  req: NextRequest,
+  webhookSecret: string | undefined,
+  stripeInstance: Stripe,
+  extraHandlers?: Record<string, (_event: any) => Promise<void>>
+) {
+  const result = await getStripeEvent(req, webhookSecret, stripeInstance)
+  if ("error" in result) {
+    return NextResponse.json({ error: result.error }, { status: result.status })
+  }
+  const { event } = result
+
+  await processStripeWebhook(event, {
+    "customer.subscription.created": handleSubscriptionCreatedOrUpdate,
+    "customer.subscription.updated": handleSubscriptionCreatedOrUpdate,
+    "customer.subscription.deleted": handleSubscriptionDeleted,
+    "radar.early_fraud_warning.created": (_event) => handleFraudWarning(_event, stripeInstance),
+    ...extraHandlers,
+  })
+
+  return NextResponse.json({ received: true })
 }

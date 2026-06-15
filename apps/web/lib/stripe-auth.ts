@@ -9,3 +9,23 @@ export async function checkStripeAuth() {
   }
   return { userId, response: null }
 }
+
+export async function validateCheckoutRequest(req: Request, schema: any) {
+  const { userId, response: authResponse } = await checkStripeAuth()
+  if (authResponse) return { userId: null, data: null, response: authResponse }
+
+  const body = await req.json()
+  const validationResult = schema.safeParse(body)
+  if (!validationResult.success) {
+    return {
+      userId,
+      data: null,
+      response: NextResponse.json(
+        { error: "Invalid request data", details: validationResult.error.errors },
+        { status: 400 }
+      )
+    }
+  }
+
+  return { userId, data: validationResult.data, response: null }
+}
