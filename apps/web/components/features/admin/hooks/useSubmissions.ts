@@ -409,62 +409,11 @@ export const useSubmissions = (isAdmin: boolean) => {
     }
   }
 
-  const updateDemoInfo = async () => {
-    if (!editingDemo) return
-
-    try {
-      const demoParams = {
-        p_component_id: editingDemo.component_data.id,
-        p_demo_name: editDemoName,
-        p_demo_slug: editDemoSlug,
-      }
-
-      const response = (await supabase.rpc(
-        "update_demo_info_as_admin",
-        demoParams,
-      )) as PostgrestSingleResponse<AdminRpcResponse>
-
-      const { data, error } = response
-
-      if (error) {
-        throw error
-      }
-
-      if (data && !data.success) {
-        throw new Error(data.error || "Failed to update demo information")
-      }
-
-      toast.success("Demo information updated successfully")
-
-      setSubmissions((prevSubmissions) =>
-        prevSubmissions.map((sub) =>
-          sub.component_data.id === editingDemo.component_data.id
-            ? {
-                ...sub,
-                name: editDemoName,
-                demo_slug: editDemoSlug,
-              }
-            : sub,
-        ),
-      )
-
-      setEditingDemo(null)
-      setEditDemoName("")
-      setEditDemoSlug("")
-    } catch (error: unknown) {
-      console.error("Error updating demo information:", error)
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to update demo information"
-      toast.error(errorMessage)
-    }
-  }
-
-  const updateDemoInfoDirect = async (
+  const updateDemoInfoBase = async (
     componentId: number,
     name: string,
     slug: string,
+    successMessage: string = "Demo information updated successfully",
   ) => {
     try {
       const demoParams = {
@@ -488,7 +437,7 @@ export const useSubmissions = (isAdmin: boolean) => {
         throw new Error(data.error || "Failed to update demo information")
       }
 
-      toast.success("Demo information updated to defaults")
+      toast.success(successMessage)
 
       setSubmissions((prevSubmissions) =>
         prevSubmissions.map((sub) =>
@@ -501,6 +450,7 @@ export const useSubmissions = (isAdmin: boolean) => {
             : sub,
         ),
       )
+      return true
     } catch (error: unknown) {
       console.error("Error updating demo information:", error)
       const errorMessage =
@@ -508,7 +458,37 @@ export const useSubmissions = (isAdmin: boolean) => {
           ? error.message
           : "Failed to update demo information"
       toast.error(errorMessage)
+      return false
     }
+  }
+
+  const updateDemoInfo = async () => {
+    if (!editingDemo) return
+
+    const success = await updateDemoInfoBase(
+      editingDemo.component_data.id,
+      editDemoName,
+      editDemoSlug,
+    )
+
+    if (success) {
+      setEditingDemo(null)
+      setEditDemoName("")
+      setEditDemoSlug("")
+    }
+  }
+
+  const updateDemoInfoDirect = async (
+    componentId: number,
+    name: string,
+    slug: string,
+  ) => {
+    await updateDemoInfoBase(
+      componentId,
+      name,
+      slug,
+      "Demo information updated to defaults",
+    )
   }
 
   const handleSelectSubmission = (submission: Submission) => {

@@ -1,21 +1,24 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@clerk/nextjs/server"
-import stripe, { stripeV2, getIdBySubscriptionPlanDetails } from "@/lib/stripe"
-import { z } from "zod"
+import { stripe, stripeV2, getIdBySubscriptionPlanDetails } from "@/lib/stripe"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
+import { checkStripeAuth } from "@/lib/stripe-auth"
+import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 
 const checkoutSchema = z.object({
   planId: z.enum(["pro", "pro_plus"]),
   successUrl: z.string().url(),
   cancelUrl: z.string().url(),
-  period: z.enum(["monthly", "yearly"]).optional().default("monthly"),
+  period: z.enum(["monthly", "yearly"]),
   isUpgrade: z.boolean().optional(),
-  currentPlanId: z.enum(["free", "pro", "pro_plus"]).optional(),
+  currentPlanId: z.string().optional(),
   subscriptionId: z.string().optional(),
 })
 
 export async function POST(request: NextRequest) {
   try {
+    const { userId, response: authResponse } = await checkStripeAuth()
+    if (authResponse) return authResponse
+
     const body = await request.json()
 
     const validationResult = checkoutSchema.safeParse(body)
@@ -39,12 +42,6 @@ export async function POST(request: NextRequest) {
       subscriptionId,
     } = validationResult.data
 
-    const authSession = await auth()
-    const userId = authSession?.userId
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const { data: user, error: userError } = await supabaseWithAdminAccess
       .from("users")
       .select("email")
@@ -53,9 +50,7 @@ export async function POST(request: NextRequest) {
 
     let priceId: string
     try {
-      // Always use version 2 for new checkouts
       priceId = await getIdBySubscriptionPlanDetails(planId, period, 2)
-      // priceId = "price_1RBCVXGClBhopEwDdb3OTKtZ"
     } catch (error) {
       return NextResponse.json(
         { error: "Invalid subscription plan configuration" },
@@ -66,7 +61,6 @@ export async function POST(request: NextRequest) {
     try {
       if (isUpgrade && currentPlanId !== "free" && subscriptionId) {
         try {
-          // For existing subscriptions, use the fallback proxy which will try V2 then V1
           const subscription =
             await stripe.subscriptions.retrieve(subscriptionId)
 
@@ -93,8 +87,7 @@ export async function POST(request: NextRequest) {
             updatedMetadata.upgraded_to = planId
             updatedMetadata.upgraded_at = new Date().toISOString()
 
-            // For updates, use the fallback proxy which will try V2 then V1
-            const updatedSubscription = await stripe.subscriptions.update(
+            await stripe.subscriptions.update(
               subscription.id,
               {
                 items: [
@@ -114,11 +107,10 @@ export async function POST(request: NextRequest) {
             })
           }
         } catch (subscriptionError) {
-          // Subscription error handled silently, will fall back to creating new checkout
+          // Subscription error handled silently
         }
       }
 
-      // For new checkout sessions, always use V2
       const session = await stripeV2.checkout.sessions.create({
         payment_method_types: ["card"],
         line_items: [

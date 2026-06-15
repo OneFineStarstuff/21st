@@ -1,16 +1,6 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      persistSession: false,
-    },
-  },
-)
+import { checkUsernameTaken } from "@/lib/user-utils"
 
 export async function POST(req: Request) {
   try {
@@ -30,14 +20,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // Check if display_username is unique across both username and display_username fields
-    const { data: existingUsers, error: queryError } = await supabaseAdmin
-      .from("users")
-      .select("id")
-      .or(
-        `username.eq."${display_username}",display_username.eq."${display_username}"`,
-      )
-      .neq("id", userId)
+    const { data: existingUsers, error: queryError } = await checkUsernameTaken(display_username, userId)
 
     if (queryError) {
       console.error("Username validation error:", queryError)

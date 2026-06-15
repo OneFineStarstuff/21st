@@ -343,3 +343,13 @@ export async function handleCheckoutSession(
     }
   }
 }
+
+export async function processStripeWebhook(
+  event: Stripe.Event,
+  handlers: Record<string, (event: any) => Promise<void>>
+) {
+  const handler = handlers[event.type]
+  if (handler) {
+    await handler(event)
+  }
+}

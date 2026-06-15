@@ -1,6 +1,6 @@
 import { stripeV2 } from "@/lib/stripe"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
-import { auth } from "@clerk/nextjs/server"
+import { checkStripeAuth } from "@/lib/stripe-auth"
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -13,11 +13,8 @@ const checkoutSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
-    const authSession = await auth()
-    const userId = authSession?.userId
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    const { userId, response: authResponse } = await checkStripeAuth()
+    if (authResponse) return authResponse
 
     const body = await request.json()
 
@@ -86,9 +83,6 @@ export async function POST(request: NextRequest) {
 
     const transfer_group = `bundle-purchase-${userId}-${bundle.id}-${plan.id}`
 
-    // TODO: Nice to have, but without payments tracking blocks from re-purchasing in case of failed payment
-    // idempotencyKey: transfer_group,
-
     const session = await stripeV2.checkout.sessions.create({
       customer_email: userData.email,
       line_items: [
@@ -98,7 +92,7 @@ export async function POST(request: NextRequest) {
             product_data: {
               name: `Bundle "${bundle.name}" (${plan.type} plan)`,
             },
-            unit_amount: plan.price, // Stripe expects cents
+            unit_amount: plan.price,
           },
           quantity: 1,
         },

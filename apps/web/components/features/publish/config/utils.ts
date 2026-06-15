@@ -1,7 +1,7 @@
 import { UseFormReturn } from "react-hook-form"
 import { z } from "zod"
 
-const demoSchema = z.object({
+export const demoSchema = z.object({
   name: z.string().min(2, {
     message: "Demo name must be at least 2 characters.",
   }),
@@ -83,7 +83,8 @@ export const formatComponentName = (name: string): string => {
   return name.replace(/([A-Z])/g, " $1").trim()
 }
 
-export const isFormValid = (form: UseFormReturn<FormData>): boolean => {
+export const isFormValid = (form: UseFormReturn<any>): boolean => {
+  const values = form.getValues()
   const {
     name,
     component_slug,
@@ -92,7 +93,7 @@ export const isFormValid = (form: UseFormReturn<FormData>): boolean => {
     registry,
     license,
     unknown_dependencies,
-  } = form.getValues()
+  } = values
 
   return Boolean(
     name?.length >= 2 &&
