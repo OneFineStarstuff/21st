@@ -4,7 +4,6 @@
  */
 
 import { PlanType, PlanPrice, PlanFeature, PricingPlan } from "@/types/global"
-import { ReactNode } from "react"
 
 export type { PlanType }
 
@@ -187,12 +186,12 @@ export const COMPARISON_FEATURES: ComparisonFeature[] = [
     values: {
       free: "-",
       pro: {
-        monthly: "$1.00 per component",
-        yearly: "$0.80 per component",
+        monthly: ".00 per component",
+        yearly: "-bash.80 per component",
       },
       pro_plus: {
-        monthly: "$0.75 per component",
-        yearly: "$0.60 per component",
+        monthly: "-bash.75 per component",
+        yearly: "-bash.60 per component",
       },
     },
   },
@@ -200,14 +199,14 @@ export const COMPARISON_FEATURES: ComparisonFeature[] = [
     name: "AI Component Generation",
     section: "Magic MCP",
     values: {
-      free: "$0.20 per generation",
+      free: "-bash.20 per generation",
       pro: {
-        monthly: "$0.40 per generation",
-        yearly: "$0.32 per generation",
+        monthly: "-bash.40 per generation",
+        yearly: "-bash.32 per generation",
       },
       pro_plus: {
-        monthly: "$0.20 per generation",
-        yearly: "$0.16 per generation",
+        monthly: "-bash.20 per generation",
+        yearly: "-bash.16 per generation",
       },
     },
   },
@@ -260,9 +259,9 @@ export const PLAN_FEATURES: PlanFeature[] = [
     included: "free",
     category: "Resources",
     valueByPlan: {
-      free: "$0.20 per generation",
-      pro: "$0.20 monthly / $0.16 yearly per generation",
-      pro_plus: "$0.15 monthly / $0.12 yearly per generation",
+      free: "-bash.20 per generation",
+      pro: "-bash.20 monthly / -bash.16 yearly per generation",
+      pro_plus: "-bash.15 monthly / -bash.12 yearly per generation",
     },
   },
   {
@@ -271,8 +270,8 @@ export const PLAN_FEATURES: PlanFeature[] = [
     category: "Resources",
     valueByPlan: {
       free: "Not available",
-      pro: "$1.00 monthly / $0.80 yearly per component",
-      pro_plus: "$0.75 monthly / $0.60 yearly per component",
+      pro: ".00 monthly / -bash.80 yearly per component",
+      pro_plus: "-bash.75 monthly / -bash.60 yearly per component",
     },
   },
 

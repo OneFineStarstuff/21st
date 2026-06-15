@@ -42,15 +42,7 @@ export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { upload: uploadToR2ClientSide } = useR2Upload()
 
-  const handleFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement>,
-    type: "image" | "video",
-  ) => {
-    const file = e.target.files?.[0]
-    if (!file) {
-      return
-    }
-
+  const processSelectedFile = async (file: File, type: "image" | "video") => {
     const maxSize = type === "image" ? 5 * 1024 * 1024 : 50 * 1024 * 1024
     if (file.size > maxSize) {
       const sizeInMb = maxSize / (1024 * 1024)
@@ -68,13 +60,22 @@ export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
         form.setValue("preview_video_data_url", previewUrl)
         form.setValue("preview_video_file", file)
       }
-    } catch (error) {
-      throw error
     } finally {
       if (type === "video") {
         setIsProcessingVideo(false)
       }
     }
+  }
+
+  const handleFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "image" | "video",
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      return
+    }
+    await processSelectedFile(file, type)
   }
 
   const uploadToStorage = async (
@@ -123,30 +124,7 @@ export function useTemplateMediaUpload(form: UseFormReturn<TemplateFormData>) {
     const file = e.dataTransfer.files[0]
     if (!file) return
 
-    const maxSize = type === "image" ? 5 * 1024 * 1024 : 50 * 1024 * 1024
-    if (file.size > maxSize) {
-      const sizeInMb = maxSize / (1024 * 1024)
-      throw new Error(`File is too large. Maximum size is ${sizeInMb} MB`)
-    }
-
-    try {
-      const previewUrl = URL.createObjectURL(file)
-
-      if (type === "image") {
-        form.setValue("preview_image_data_url", previewUrl)
-        form.setValue("preview_image_file", file)
-      } else {
-        setIsProcessingVideo(true)
-        form.setValue("preview_video_data_url", previewUrl)
-        form.setValue("preview_video_file", file)
-      }
-    } catch (error) {
-      throw error
-    } finally {
-      if (type === "video") {
-        setIsProcessingVideo(false)
-      }
-    }
+    await processSelectedFile(file, type)
   }
 
   const handleClick = () => {

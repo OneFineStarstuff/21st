@@ -1,16 +1,7 @@
 import logging
 import torch
 import torch.nn.functional as F
-from captum.attr import IntegratedGradients
-from performer_pytorch import Performer
-from safetensors.torch import save_file
 from torch import nn
-from torch.amp import GradScaler, autocast
-from torch.distributions import Categorical
-from torch.utils.checkpoint import checkpoint
-from torch.utils.data import DataLoader, Dataset
-from torchvision import models
-from transformers import GPT2Model
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 
@@ -51,13 +42,13 @@ class DynamicRouter(nn.Module):
 
 class UnifiedAGISystem(nn.Module):
     """Unified AGI system integrating perception, memory, and decision making."""
-    def __init__(self, sensor_dim: int, hidden_dim: int, memory_size: int = 320, output_dim: int = 10):
+    def __init__(self, sensor_dim: int, hidden_dim: int, _memory_size: int = 320, output_dim: int = 10):
         super().__init__()
         self.perception_fc = nn.Linear(sensor_dim, hidden_dim)
         self.cae_layer = ContextualAttributionEnvelope(hidden_dim)
         self.router = DynamicRouter(hidden_dim, hidden_dim)
         self.output = nn.Linear(hidden_dim, output_dim)
-    def forward(self, text, image, sensor):
+    def forward(self, _text, _image, sensor):
         feat = F.relu(self.perception_fc(sensor))
         routed = self.router(feat)
         return self.output(routed), torch.tensor([0.0])

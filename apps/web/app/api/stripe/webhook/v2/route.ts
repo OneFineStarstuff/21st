@@ -11,20 +11,19 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: result.status })
   const { event } = result
   const supabase = supabaseWithAdminAccess
-  switch (event.type) {
-    case "customer.subscription.created":
-    case "customer.subscription.updated":
-      await handleSubscriptionCreatedOrUpdate(event, supabase)
-      break
-    case "customer.subscription.deleted":
-      await handleSubscriptionDeleted(event, supabase)
-      break
-    case "radar.early_fraud_warning.created":
-      await handleFraudWarning(event, supabase)
-      break
-    case "checkout.session.completed":
-      await handleCheckoutSession(event, supabase)
-      break
+
+  const eventHandlers: Record<string, (event: any, supabase: any) => Promise<void>> = {
+    "customer.subscription.created": handleSubscriptionCreatedOrUpdate,
+    "customer.subscription.updated": handleSubscriptionCreatedOrUpdate,
+    "customer.subscription.deleted": handleSubscriptionDeleted,
+    "radar.early_fraud_warning.created": handleFraudWarning,
+    "checkout.session.completed": handleCheckoutSession,
   }
+
+  const handler = eventHandlers[event.type]
+  if (handler) {
+    await handler(event, supabase)
+  }
+
   return NextResponse.json({ received: true })
 }
