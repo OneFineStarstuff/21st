@@ -1,6 +1,7 @@
 import { stripe, stripeV2, getIdBySubscriptionPlanDetails } from "@/lib/stripe"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { handleAuthenticatedRequest } from "@/lib/api-utils"
+import { validateStripeRequest } from "@/lib/stripe-utils"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -16,12 +17,10 @@ const checkoutSchema = z.object({
 
 export async function POST(request: Request) {
   return handleAuthenticatedRequest(request, async (userId, body) => {
-    const validationResult = checkoutSchema.safeParse(body)
-    if (!validationResult.success) {
-      return NextResponse.json({ error: "Invalid data", details: validationResult.error.errors }, { status: 400 })
-    }
+    const { data, error } = validateStripeRequest(body, checkoutSchema)
+    if (error) return error
 
-    const { planId, successUrl, cancelUrl, period, isUpgrade, currentPlanId, subscriptionId } = validationResult.data
+    const { planId, successUrl, cancelUrl, period, isUpgrade, currentPlanId, subscriptionId } = data
     const { data: user } = await supabaseWithAdminAccess.from("users").select("email").eq("id", userId).maybeSingle()
 
     let priceId

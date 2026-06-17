@@ -1,7 +1,7 @@
 import logging
 
 import torch
-import torch.nn as nn
+from torch import nn
 import torch.nn.functional as F
 from performer_pytorch import Performer
 from torchvision.models import efficientnet_b0
@@ -274,7 +274,7 @@ class UnifiedAGISystem(nn.Module):
 
     def __init__(
         self,
-        sensor_dim: int,
+        _sensor_dim: int,
         hidden_dim: int,
         memory_size: int = 320,
         output_dim: int = 10,

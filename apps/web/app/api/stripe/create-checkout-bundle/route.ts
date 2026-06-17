@@ -1,6 +1,7 @@
 import { stripeV2 } from "@/lib/stripe"
 import { supabaseWithAdminAccess } from "@/lib/supabase"
 import { handleAuthenticatedRequest } from "@/lib/api-utils"
+import { validateStripeRequest } from "@/lib/stripe-utils"
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
@@ -13,12 +14,10 @@ const checkoutSchema = z.object({
 
 export async function POST(request: Request) {
   return handleAuthenticatedRequest(request, async (userId, body) => {
-    const validationResult = checkoutSchema.safeParse(body)
-    if (!validationResult.success) {
-      return NextResponse.json({ error: "Invalid data", details: validationResult.error.errors }, { status: 400 })
-    }
+    const { data, error } = validateStripeRequest(body, checkoutSchema)
+    if (error) return error
 
-    const { bundleId, planId, successUrl, cancelUrl } = validationResult.data
+    const { bundleId, planId, successUrl, cancelUrl } = data
     const { data: bundle } = await supabaseWithAdminAccess.from("bundles").select("*").eq("id", bundleId).single()
     if (!bundle || bundle.user_id === userId) return NextResponse.json({ error: "Invalid bundle" }, { status: 400 })
 

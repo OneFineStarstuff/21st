@@ -1,11 +1,13 @@
+from __future__ import annotations
+
 import logging
-from typing import List, Optional
 
 import torch
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from model import UnifiedAGISystem
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
+from model import UnifiedAGISystem
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -17,29 +19,29 @@ app = FastAPI(
 )
 
 # Global model instance
-model = UnifiedAGISystem(sensor_dim=10, hidden_dim=256)
+model = UnifiedAGISystem(10, hidden_dim=256, memory_size=320)
 model.eval()
 
 
 class PredictionRequest(BaseModel):
     """Request model for AGI prediction."""
 
-    text_tokens: List[int]
-    sensor_data: List[float]
-    prev_h: Optional[List[float]] = None
-    prev_c: Optional[List[float]] = None
-    prev_r: Optional[List[float]] = None
+    text_tokens: list[int]
+    sensor_data: list[float]
+    prev_h: list[float] | None = None
+    prev_c: list[float] | None = None
+    prev_r: list[float] | None = None
 
 
 class PredictionResponse(BaseModel):
     """Response model for AGI prediction."""
 
-    policy: List[float]
+    policy: list[float]
     value: float
     parity_deviation: float
-    next_h: List[float]
-    next_c: List[float]
-    next_r: List[float]
+    next_h: list[float]
+    next_c: list[float]
+    next_r: list[float]
 
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -84,7 +86,7 @@ async def predict(request: PredictionRequest):
         )
     except Exception as e:
         logging.error("Prediction error: %s", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/health")
@@ -94,4 +96,4 @@ async def health():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
