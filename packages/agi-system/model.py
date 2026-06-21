@@ -1,9 +1,10 @@
 import logging
 
 import torch
-from torch import nn
 import torch.nn.functional as F
 from performer_pytorch import Performer
+from safetensors.torch import load_model, save_file
+from torch import nn
 from torchvision.models import efficientnet_b0
 from transformers import GPT2Config, GPT2Model
 
@@ -331,6 +332,28 @@ class UnifiedAGISystem(nn.Module):
 
         policy, value = self.decision_module(routed)
         return policy, value, parity_deviation, next_state
+
+    def save_to_safetensors(self, path: str):
+        """
+        Saves the model state using safetensors for high-assurance serialization.
+
+        Args:
+            path (str): The file path to save the model.
+        """
+        # Using v.clone().contiguous() to handle shared memory/experts as per project guidelines
+        state_dict = {k: v.clone().contiguous() for k, v in self.state_dict().items()}
+        save_file(state_dict, path)
+        logging.info("Model saved to %s using safetensors.", path)
+
+    def load_from_safetensors(self, path: str):
+        """
+        Loads the model state from a safetensors file.
+
+        Args:
+            path (str): The file path to load the model from.
+        """
+        load_model(self, path, strict=False)
+        logging.info("Model loaded from %s using safetensors (non-strict).", path)
 
 
 if __name__ == "__main__":
