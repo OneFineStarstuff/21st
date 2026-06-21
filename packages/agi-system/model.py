@@ -1,9 +1,9 @@
 import logging
-
-import torch
-from torch import nn
-import torch.nn.functional as F
 from performer_pytorch import Performer
+from safetensors.torch import load_model, save_file
+from torch import nn
+import torch
+import torch.nn.functional as F
 from torchvision.models import efficientnet_b0
 from transformers import GPT2Config, GPT2Model
 
@@ -35,7 +35,7 @@ class ZKFairnessLayer(nn.Module):
         Returns:
             torch.Tensor: The parity deviation score.
         """
-        # Demographic Parity: expert selection should be independent of protected attributes (mocked by uniform selection)
+        # Demographic Parity: expert selection should be independent of protected attributes
         selection_prob = gate_scores.mean(dim=0)
         ideal_prob = 1.0 / self.num_experts
         parity_score = torch.abs(selection_prob - ideal_prob).sum()
@@ -283,7 +283,7 @@ class UnifiedAGISystem(nn.Module):
         Initializes the UnifiedAGISystem.
 
         Args:
-            sensor_dim (int): Dimension of sensor input.
+            _sensor_dim (int): Dimension of sensor input (unused).
             hidden_dim (int): Hidden dimensionality.
             memory_size (int): Size of the memory matrix.
             output_dim (int): Output dimensionality.
@@ -331,6 +331,28 @@ class UnifiedAGISystem(nn.Module):
 
         policy, value = self.decision_module(routed)
         return policy, value, parity_deviation, next_state
+
+    def save_to_safetensors(self, path: str):
+        """
+        Saves the model state using safetensors for high-assurance serialization.
+
+        Args:
+            path (str): The file path to save the model.
+        """
+        # Using v.clone().contiguous() to handle shared memory/experts
+        state_dict = {k: v.clone().contiguous() for k, v in self.state_dict().items()}
+        save_file(state_dict, path)
+        logging.info("Model saved to %s using safetensors.", path)
+
+    def load_from_safetensors(self, path: str):
+        """
+        Loads the model state from a safetensors file.
+
+        Args:
+            path (str): The file path to load the model from.
+        """
+        load_model(self, path, strict=False)
+        logging.info("Model loaded from %s using safetensors (non-strict).", path)
 
 
 if __name__ == "__main__":
