@@ -1,9 +1,13 @@
-import unittest
-import torch
 import os
+import unittest
+
+import torch
 from model import UnifiedAGISystem
 
+
 class TestUnifiedAGISystem(unittest.TestCase):
+    """Unit tests for the UnifiedAGISystem."""
+
     def setUp(self):
         self.hidden_dim = 256
         self.model = UnifiedAGISystem(10, hidden_dim=self.hidden_dim)
@@ -14,6 +18,7 @@ class TestUnifiedAGISystem(unittest.TestCase):
             os.remove(self.test_path)
 
     def test_forward_pass(self):
+        """Tests the model forward pass."""
         batch_size = 2
         text = torch.randint(0, 100, (batch_size, 5))
         image = torch.randn(batch_size, 3, 224, 224)
@@ -27,6 +32,7 @@ class TestUnifiedAGISystem(unittest.TestCase):
         self.assertEqual(len(next_state), 3)
 
     def test_safetensors_serialization(self):
+        """Tests saving and loading with safetensors."""
         # Save model
         self.model.save_to_safetensors(self.test_path)
         self.assertTrue(os.path.exists(self.test_path))
@@ -38,6 +44,7 @@ class TestUnifiedAGISystem(unittest.TestCase):
         # Check some parameters
         for p1, p2 in zip(self.model.parameters(), new_model.parameters()):
             self.assertTrue(torch.equal(p1, p2))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,9 +1,11 @@
-import torch
 import time
-import pytest
+
+import torch
 from model import UnifiedAGISystem
 
+
 def test_benchmark_inference():
+    """Benchmarks the inference latency of the UnifiedAGISystem."""
     hidden_dim = 256
     model = UnifiedAGISystem(10, hidden_dim=hidden_dim)
     model.eval()
@@ -27,7 +29,12 @@ def test_benchmark_inference():
 
     avg_latency = (end_time - start_time) / iterations
     print(f"\nAverage Inference Latency: {avg_latency:.4f} seconds")
-    assert avg_latency < 1.0  # Threshold for benchmark
+
+    if avg_latency >= 1.0:
+        raise RuntimeError(
+            f"Benchmark failed: Average latency {avg_latency:.4f}s exceeds threshold of 1.0s"
+        )
+
 
 if __name__ == "__main__":
     test_benchmark_inference()
