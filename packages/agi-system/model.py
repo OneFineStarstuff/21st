@@ -1,9 +1,9 @@
 import logging
 
-import torch
-import torch.nn.functional as F
 from performer_pytorch import Performer
 from safetensors.torch import load_model, save_file
+import torch
+import torch.nn.functional as F
 from torch import nn
 from torchvision.models import efficientnet_b0
 from transformers import GPT2Config, GPT2Model
@@ -36,7 +36,7 @@ class ZKFairnessLayer(nn.Module):
         Returns:
             torch.Tensor: The parity deviation score.
         """
-        # Demographic Parity: expert selection should be independent of protected attributes (mocked by uniform selection)
+        # Demographic Parity: expert selection should be independent of protected attributes
         selection_prob = gate_scores.mean(dim=0)
         ideal_prob = 1.0 / self.num_experts
         parity_score = torch.abs(selection_prob - ideal_prob).sum()
@@ -340,7 +340,7 @@ class UnifiedAGISystem(nn.Module):
         Args:
             path (str): The file path to save the model.
         """
-        # Using v.clone().contiguous() to handle shared memory/experts as per project guidelines
+        # Using v.clone().contiguous() to handle shared memory/experts
         state_dict = {k: v.clone().contiguous() for k, v in self.state_dict().items()}
         save_file(state_dict, path)
         logging.info("Model saved to %s using safetensors.", path)

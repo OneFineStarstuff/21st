@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 
-import torch
-import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+import torch
+import uvicorn
 
 from model import UnifiedAGISystem
 

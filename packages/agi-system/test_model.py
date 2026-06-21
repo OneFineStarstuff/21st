@@ -2,6 +2,7 @@ import os
 import unittest
 
 import torch
+
 from model import UnifiedAGISystem
 
 
@@ -9,11 +10,13 @@ class TestUnifiedAGISystem(unittest.TestCase):
     """Unit tests for the UnifiedAGISystem."""
 
     def setUp(self):
+        """Sets up the test environment."""
         self.hidden_dim = 256
         self.model = UnifiedAGISystem(10, hidden_dim=self.hidden_dim)
         self.test_path = "test_model.safetensors"
 
     def tearDown(self):
+        """Cleans up after tests."""
         if os.path.exists(self.test_path):
             os.remove(self.test_path)
 
