@@ -1,10 +1,9 @@
 import logging
-
 from performer_pytorch import Performer
 from safetensors.torch import load_model, save_file
+from torch import nn
 import torch
 import torch.nn.functional as F
-from torch import nn
 from torchvision.models import efficientnet_b0
 from transformers import GPT2Config, GPT2Model
 
@@ -284,7 +283,7 @@ class UnifiedAGISystem(nn.Module):
         Initializes the UnifiedAGISystem.
 
         Args:
-            sensor_dim (int): Dimension of sensor input.
+            _sensor_dim (int): Dimension of sensor input (unused).
             hidden_dim (int): Hidden dimensionality.
             memory_size (int): Size of the memory matrix.
             output_dim (int): Output dimensionality.
