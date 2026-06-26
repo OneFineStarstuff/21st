@@ -313,7 +313,7 @@ class GovernanceEngine:
         self.threshold = threshold
 
     def calculate_gsri(
-        self,
+        _self,
         policy_uncertainty: float,
         parity_deviation: float,
         interpretability: float,
@@ -328,7 +328,7 @@ class GovernanceEngine:
         )
         return risk
 
-    def get_maturity_score(self, gsri: float, compliance_history: list) -> int:
+    def get_maturity_score(_self, gsri: float, compliance_history: list) -> int:
         """
         Calculates Ethics Maturity Score (Target: 3).
         """

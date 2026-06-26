@@ -28,15 +28,22 @@ class TestUnifiedAGISystem(unittest.TestCase):
 
         policy, value, compliance_data, next_state = self.model(text, image, sensor)
 
-        self.assertEqual(policy.shape, (batch_size, 10))
-        self.assertEqual(value.shape, (batch_size, 1))
+        if policy.shape != (batch_size, 10):
+            raise RuntimeError("Policy shape mismatch")
+        if value.shape != (batch_size, 1):
+            raise RuntimeError("Value shape mismatch")
         if not isinstance(compliance_data, dict):
             raise RuntimeError("compliance_data should be a dict")
-        self.assertIn("parity_deviation", compliance_data)
-        self.assertIn("gsri", compliance_data)
-        self.assertIn("maturity_score", compliance_data)
-        self.assertIn("proof", compliance_data)
-        self.assertEqual(len(next_state), 3)
+        if "parity_deviation" not in compliance_data:
+            raise RuntimeError("Missing parity_deviation")
+        if "gsri" not in compliance_data:
+            raise RuntimeError("Missing gsri")
+        if "maturity_score" not in compliance_data:
+            raise RuntimeError("Missing maturity_score")
+        if "proof" not in compliance_data:
+            raise RuntimeError("Missing proof")
+        if len(next_state) != 3:
+            raise RuntimeError("next_state length mismatch")
 
     def test_compliance_metrics(self):
         """Tests specifically for compliance metrics and maturity scoring."""
@@ -49,11 +56,16 @@ class TestUnifiedAGISystem(unittest.TestCase):
             text, image, sensor, compute_attributions=True
         )
 
-        self.assertGreaterEqual(compliance_data["maturity_score"], 1)
-        self.assertLessEqual(compliance_data["maturity_score"], 4)
-        self.assertIn("is_compliant", compliance_data["proof"])
-        self.assertIn("attestation", compliance_data["proof"])
-        self.assertIn("attributions", compliance_data)
+        if compliance_data["maturity_score"] < 1:
+            raise RuntimeError("Maturity score too low")
+        if compliance_data["maturity_score"] > 4:
+            raise RuntimeError("Maturity score too high")
+        if "is_compliant" not in compliance_data["proof"]:
+            raise RuntimeError("Missing is_compliant in proof")
+        if "attestation" not in compliance_data["proof"]:
+            raise RuntimeError("Missing attestation in proof")
+        if "attributions" not in compliance_data:
+            raise RuntimeError("Missing attributions")
 
     def test_safetensors_serialization(self):
         """Tests saving and loading with safetensors."""
