@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import logging
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+
 import torch
 import uvicorn
+from fastapi import FastAPI, HTTPException
 from model import UnifiedAGISystem
+from pydantic import BaseModel
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -28,6 +30,7 @@ class PredictionRequest(BaseModel):
     prev_h: list[float] | None = None
     prev_c: list[float] | None = None
     prev_r: list[float] | None = None
+    compute_attributions: bool = False
 
 
 class PredictionResponse(BaseModel):
@@ -36,6 +39,11 @@ class PredictionResponse(BaseModel):
     policy: list[float]
     value: float
     parity_deviation: float
+    gsri: float
+    maturity_score: int
+    interpretability_relevance: float
+    attestation: str
+    is_compliant: bool
     next_h: list[float]
     next_c: list[float]
     next_r: list[float]
@@ -67,8 +75,12 @@ async def predict(request: PredictionRequest):
             )
 
         with torch.no_grad():
-            policy, value, parity_deviation, next_state = model(
-                text, image, sensor, prev_state
+            policy, value, compliance_data, next_state = model(
+                text,
+                image,
+                sensor,
+                prev_state,
+                compute_attributions=request.compute_attributions,
             )
 
         next_h, next_c, next_r = next_state
@@ -76,7 +88,12 @@ async def predict(request: PredictionRequest):
         return PredictionResponse(
             policy=policy[0].tolist(),
             value=value[0].item(),
-            parity_deviation=parity_deviation.item(),
+            parity_deviation=compliance_data["parity_deviation"].item(),
+            gsri=compliance_data["gsri"],
+            maturity_score=compliance_data["maturity_score"],
+            interpretability_relevance=compliance_data["interpretability_relevance"],
+            attestation=compliance_data["proof"]["attestation"],
+            is_compliant=compliance_data["proof"]["is_compliant"],
             next_h=next_h[0].tolist(),
             next_c=next_c[0].tolist(),
             next_r=next_r[0].tolist(),
