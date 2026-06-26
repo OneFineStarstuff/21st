@@ -25,12 +25,31 @@ class TestUnifiedAGISystem(unittest.TestCase):
         image = torch.randn(batch_size, 3, 224, 224)
         sensor = torch.randn(batch_size, 10)
 
-        policy, value, parity, next_state = self.model(text, image, sensor)
+        policy, value, compliance_data, next_state = self.model(text, image, sensor)
 
         self.assertEqual(policy.shape, (batch_size, 10))
         self.assertEqual(value.shape, (batch_size, 1))
-        self.assertIsInstance(parity, torch.Tensor)
+        self.assertIsInstance(compliance_data, dict)
+        self.assertIn("parity_deviation", compliance_data)
+        self.assertIn("gsri", compliance_data)
+        self.assertIn("maturity_score", compliance_data)
+        self.assertIn("proof", compliance_data)
         self.assertEqual(len(next_state), 3)
+
+    def test_compliance_metrics(self):
+        """Tests specifically for compliance metrics and maturity scoring."""
+        batch_size = 1
+        text = torch.randint(0, 100, (batch_size, 5))
+        image = torch.randn(batch_size, 3, 224, 224)
+        sensor = torch.randn(batch_size, 10)
+
+        _, _, compliance_data, _ = self.model(text, image, sensor, compute_attributions=True)
+
+        self.assertGreaterEqual(compliance_data["maturity_score"], 1)
+        self.assertLessEqual(compliance_data["maturity_score"], 4)
+        self.assertIn("is_compliant", compliance_data["proof"])
+        self.assertIn("attestation", compliance_data["proof"])
+        self.assertIn("attributions", compliance_data)
 
     def test_safetensors_serialization(self):
         """Tests saving and loading with safetensors."""
