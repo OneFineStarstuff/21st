@@ -1,5 +1,6 @@
 import os
 import unittest
+
 import torch
 from model import UnifiedAGISystem
 
@@ -29,7 +30,8 @@ class TestUnifiedAGISystem(unittest.TestCase):
 
         self.assertEqual(policy.shape, (batch_size, 10))
         self.assertEqual(value.shape, (batch_size, 1))
-        self.assertIsInstance(compliance_data, dict)
+        if not isinstance(compliance_data, dict):
+            raise RuntimeError("compliance_data should be a dict")
         self.assertIn("parity_deviation", compliance_data)
         self.assertIn("gsri", compliance_data)
         self.assertIn("maturity_score", compliance_data)
@@ -43,7 +45,9 @@ class TestUnifiedAGISystem(unittest.TestCase):
         image = torch.randn(batch_size, 3, 224, 224)
         sensor = torch.randn(batch_size, 10)
 
-        _, _, compliance_data, _ = self.model(text, image, sensor, compute_attributions=True)
+        _, _, compliance_data, _ = self.model(
+            text, image, sensor, compute_attributions=True
+        )
 
         self.assertGreaterEqual(compliance_data["maturity_score"], 1)
         self.assertLessEqual(compliance_data["maturity_score"], 4)
@@ -55,7 +59,8 @@ class TestUnifiedAGISystem(unittest.TestCase):
         """Tests saving and loading with safetensors."""
         # Save model
         self.model.save_to_safetensors(self.test_path)
-        self.assertTrue(os.path.exists(self.test_path))
+        if not os.path.exists(self.test_path):
+            raise RuntimeError("Model file not found after save")
 
         # Load model into a new instance
         new_model = UnifiedAGISystem(10, hidden_dim=self.hidden_dim)
@@ -63,7 +68,8 @@ class TestUnifiedAGISystem(unittest.TestCase):
 
         # Check some parameters
         for p1, p2 in zip(self.model.parameters(), new_model.parameters()):
-            self.assertTrue(torch.equal(p1, p2))
+            if not torch.equal(p1, p2):
+                raise RuntimeError("Parameters not equal after load")
 
 
 if __name__ == "__main__":

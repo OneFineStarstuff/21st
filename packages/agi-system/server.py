@@ -1,10 +1,12 @@
 from __future__ import annotations
+
 import logging
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+
 import torch
 import uvicorn
+from fastapi import FastAPI, HTTPException
 from model import UnifiedAGISystem
+from pydantic import BaseModel
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -74,7 +76,11 @@ async def predict(request: PredictionRequest):
 
         with torch.no_grad():
             policy, value, compliance_data, next_state = model(
-                text, image, sensor, prev_state, compute_attributions=request.compute_attributions
+                text,
+                image,
+                sensor,
+                prev_state,
+                compute_attributions=request.compute_attributions,
             )
 
         next_h, next_c, next_r = next_state

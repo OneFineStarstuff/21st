@@ -1,12 +1,13 @@
 import logging
+
+import torch
+import torch.nn.functional as F
+from captum.attr import IntegratedGradients
 from performer_pytorch import Performer
 from safetensors.torch import load_model, save_file
 from torch import nn
-import torch
-import torch.nn.functional as F
 from torchvision.models import efficientnet_b0
 from transformers import GPT2Config, GPT2Model
-from captum.attr import IntegratedGradients
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s"
@@ -49,14 +50,14 @@ class ZKFairnessLayer(nn.Module):
 
         if not self.training:
             logging.info(
-                "MAS FEAT Compliance Check: Total Deviation = %.4f, Max = %.4f, Var = %.6f",
+                "MAS FEAT Compliance Check: Total Deviation = %f, Max = %f, Var = %f",
                 total_deviation.item(),
                 max_deviation.item(),
                 variance.item(),
             )
             if total_deviation > self.threshold:
                 logging.warning(
-                    "High demographic parity deviation detected (%.4f). Potential bias in MoE routing.",
+                    "High demographic parity deviation detected (%f). Potential bias in MoE routing.",
                     total_deviation.item(),
                 )
 
@@ -77,7 +78,11 @@ class ZKFairnessLayer(nn.Module):
             "total_deviation": total_deviation,
             "threshold": self.threshold,
             "is_compliant": total_deviation <= self.threshold,
-            "attestation": "DEMOGRAPHIC_PARITY_VERIFIED" if total_deviation <= self.threshold else "BIAS_DETECTED"
+            "attestation": (
+                "DEMOGRAPHIC_PARITY_VERIFIED"
+                if total_deviation <= self.threshold
+                else "BIAS_DETECTED"
+            ),
         }
 
 
@@ -114,7 +119,7 @@ class ContextualAttributionEnvelope(nn.Module):
         if not self.training:
             relevance = interpreted_attributions.abs().mean().item()
             logging.info(
-                "HKMA Ethics Interpretability Layer: Contextual Attribution Relevance = %.4f",
+                "HKMA Ethics Interpretability Layer: Contextual Attribution Relevance = %f",
                 relevance,
             )
 
@@ -277,7 +282,11 @@ class DecisionModule(nn.Module):
         """
         super().__init__()
         self.performer = Performer(
-            dim=hidden_dim, depth=1, heads=4, dim_head=hidden_dim // 4, causal=True
+            dim=hidden_dim,
+            depth=1,
+            heads=4,
+            dim_head=hidden_dim // 4,
+            causal=True,
         )
         self.policy_head = nn.Linear(hidden_dim, output_dim)
         self.value_head = nn.Linear(hidden_dim, 1)
@@ -304,12 +313,19 @@ class GovernanceEngine:
         self.threshold = threshold
 
     def calculate_gsri(
-        self, policy_uncertainty: float, parity_deviation: float, interpretability: float
+        self,
+        policy_uncertainty: float,
+        parity_deviation: float,
+        interpretability: float,
     ) -> float:
         """
         Calculates Bayesian G-SRI (Governance-Systemic Risk Index).
         """
-        risk = (policy_uncertainty * 0.5) + (parity_deviation * 100.0 * 0.3) + (1.0 - interpretability) * 20.0
+        risk = (
+            (policy_uncertainty * 0.5)
+            + (parity_deviation * 100.0 * 0.3)
+            + (1.0 - interpretability) * 20.0
+        )
         return risk
 
     def get_maturity_score(self, gsri: float, compliance_history: list) -> int:
@@ -323,6 +339,7 @@ class GovernanceEngine:
         if gsri < 40.0:
             return 2  # Repeatable
         return 1  # Initial
+
 
 class UnifiedAGISystem(nn.Module):
     """Unified AGI system integrating perception, memory, and decision making."""
@@ -367,7 +384,7 @@ class UnifiedAGISystem(nn.Module):
         image: torch.Tensor,
         sensor: torch.Tensor,
         prev_state: tuple = None,
-        compute_attributions: bool = False
+        compute_attributions: bool = False,
     ) -> tuple:
         """
         Forward pass for the AGI system.
@@ -421,7 +438,7 @@ class UnifiedAGISystem(nn.Module):
             "maturity_score": maturity_score,
             "interpretability_relevance": interpretability_relevance,
             "proof": self.router.fairness_monitor.generate_proof(gate_scores),
-            "attributions": contextual_attributions
+            "attributions": contextual_attributions,
         }
 
         return policy, value, compliance_data, next_state
@@ -433,6 +450,7 @@ class UnifiedAGISystem(nn.Module):
         Args:
             path (str): The file path to save the model.
         """
+        # Using v.clone().contiguous() to handle shared memory/experts
         state_dict = {k: v.clone().contiguous() for k, v in self.state_dict().items()}
         save_file(state_dict, path)
         logging.info("Model saved to %s using safetensors.", path)
